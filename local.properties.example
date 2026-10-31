@@ -1,0 +1,9 @@
+# Template konfigurasi lokal
+# Salin file ini menjadi local.properties, lalu isi sesuai mesin kamu.
+# File local.properties TIDAK boleh di-commit (sudah ada di .gitignore).
+
+sdk.dir=/path/ke/Android/Sdk
+
+# Kredensial Supabase (isi saat masuk Progress 2, jangan di-commit)
+# SUPABASE_URL=
+# SUPABASE_ANON_KEY=
