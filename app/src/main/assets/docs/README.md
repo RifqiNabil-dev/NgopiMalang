@@ -3,12 +3,6 @@
 Aplikasi katalog cafe Malang — tugas akhir PAPB PTI A.
 Tahap sekarang: **Progress 1 — halaman antarmuka, data masih dummy (belum ada database).**
 
-> **Isi panduan ini: bahan + tugas, bukan solusi.**
-> Setiap dokumen fitur hanya menjelaskan **apa yang sudah disediakan** (model, data dummy,
-> komponen, route) dan **apa yang perlu kamu buat**. Kode layarnya kamu tulis sendiri —
-> tidak ada yang bisa di-copy paste jadi. Kalau mentok, tanya pemilik fondasi (Rifqi) atau
-> diskusikan di grup, jangan minta jawaban jadi.
-
 > **Lokasi folder ini:** `app/src/main/assets/docs/`
 > Di Android Studio, buka panel Project dalam tampilan **Android** → `app` → **`assets`** → **`docs`**.
 > (Kalau `assets` belum kelihatan, klik kanan `app` → *Reload from Disk* atau lakukan Gradle Sync sekali.)
