@@ -11,6 +11,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ngopimalang.app.features.directory.DirectoryViewModel
+import com.ngopimalang.app.features.directory.DirectoryScreen
+import com.ngopimalang.app.features.directory.DirectoryDetailScreen
 import com.ngopimalang.app.core.ui.FeaturePlaceholderScreen
 import com.ngopimalang.app.features.auth.AuthViewModel
 import com.ngopimalang.app.features.auth.LoginScreen
@@ -95,11 +99,23 @@ fun AppNavHost(
 
         // ---- Placeholder modul anggota, ganti dengan screen asli masing-masing ----
         composable(NavRoutes.DIRECTORY) {
-            FeaturePlaceholderScreen(
-                title = "Direktori Cafe",
-                owner = "Ossa Amelia Zuhra Lubis",
-                listComponent = "LazyVerticalGrid 2 kolom",
-                flows = listOf("List/Grid", "Detail Cafe", "Form Tambah/Edit")
+            val directoryViewModel: DirectoryViewModel = viewModel()
+            val directoryState by directoryViewModel.uiState.collectAsStateWithLifecycle()
+            DirectoryScreen(
+                state = directoryState,
+                onSearchChange = directoryViewModel::onSearchChange,
+                onToggleWifi = directoryViewModel::toggleWifi,
+                onTogglePlugs = directoryViewModel::togglePlugs,
+                onResetFilters = directoryViewModel::resetFilters,
+                onCafeClick = { id -> navController.navigate("directory/cafe/${android.net.Uri.encode(id)}") }
+            )
+        }
+
+        composable(NavRoutes.DIRECTORY_DETAIL) { entry ->
+            val directoryViewModel: DirectoryViewModel = viewModel()
+            DirectoryDetailScreen(
+                cafe = directoryViewModel.findCafe(entry.arguments?.getString("cafeId")),
+                onBack = { navController.popBackStack() }
             )
         }
 

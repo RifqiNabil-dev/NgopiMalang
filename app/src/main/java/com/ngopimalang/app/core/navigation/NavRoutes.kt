@@ -13,6 +13,7 @@ object NavRoutes {
 
     // Fitur anggota
     const val DIRECTORY = "directory"      // Ossa - Direktori Cafe
+    const val DIRECTORY_DETAIL = "directory/cafe/{cafeId}"
     const val REVIEWS = "reviews"          // Shelfina - Ulasan & Rating
     const val BOOKMARK = "bookmark"        // Shananda - Saved Spot / Bookmark
     const val VIBE = "vibe"                // Evia - Kategori Vibe Cafe
