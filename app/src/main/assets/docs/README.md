@@ -100,7 +100,7 @@ Contoh nyata yang sudah jadi (boleh dibaca sebagai referensi pola): `features/au
 
 ---
 
-## 4. Alur menyambungkan layarmu (3 langkah, tanpa kode jadi)
+## 4. Alur menyambungkan layarmu
 
 **Langkah 1 — buat layar di folder fitur kalian.**
 Nama file: `features/<fitur>/<Nama>Screen.kt`, dengan satu `@Composable fun <Nama>Screen(...)`
@@ -134,7 +134,7 @@ Sisanya (isi layar, ViewModel, filter, state) kamu yang tulis.
 | [05-reviews.md](05-reviews.md) | Bahan & tugas fitur Ulasan & Rating — **Shelfina** |
 | [06-bookmark.md](06-bookmark.md) | Bahan & tugas fitur Saved Spot — **Shananda** |
 | [07-vibe.md](07-vibe.md) | Bahan & tugas fitur Kategori Vibe — **Evia** |
-| [08-komponen-bersama.md](08-komponen-bersama.md) | Aturan warna & ukuran, katalog komponen siap pakai, pola ViewModel, jebakan umum |
+| [08-komponen-bersama.md](08-komponen-bersama.md) | Aturan warna & ukuran, katalog komponen siap pakai, pola ViewModel |
 
 ---
 
