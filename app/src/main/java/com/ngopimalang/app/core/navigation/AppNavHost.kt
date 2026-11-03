@@ -25,6 +25,7 @@ import com.ngopimalang.app.features.vibe.VibeDetailScreen
 import com.ngopimalang.app.features.vibe.VibeFormScreen
 import com.ngopimalang.app.features.vibe.VibeScreen
 import com.ngopimalang.app.features.vibe.VibeViewModel
+import com.ngopimalang.app.features.bookmark.BookmarkScreen
 
 /**
  * Peta seluruh halaman aplikasi.
@@ -120,14 +121,11 @@ fun AppNavHost(
             )
         }
 
+
         composable(NavRoutes.BOOKMARK) {
-            FeaturePlaceholderScreen(
-                title = "Saved Spot / Bookmark",
-                owner = "Shananda Putri Aisyah",
-                listComponent = "LazyColumn",
-                flows = listOf("Daftar Saved Spot", "Detail", "Form Catatan")
-            )
+            BookmarkScreen()
         }
+
 
         composable(NavRoutes.VIBE) { entry ->
             val vibeViewModel: VibeViewModel = viewModel(entry)
