@@ -21,6 +21,7 @@ import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
+import com.ngopimalang.app.features.bookmark.BookmarkScreen
 import com.ngopimalang.app.features.reviews.ReviewsScreen
 
 /**
@@ -100,29 +101,16 @@ fun AppNavHost(
 
         // ---- Placeholder modul anggota, ganti dengan screen asli masing-masing ----
         composable(NavRoutes.DIRECTORY) {
-            val directoryViewModel: DirectoryViewModel = viewModel()
-            val directoryState by directoryViewModel.uiState.collectAsStateWithLifecycle()
-            DirectoryScreen(
-                state = directoryState,
-                onSearchChange = directoryViewModel::onSearchChange,
-                onToggleWifi = directoryViewModel::toggleWifi,
-                onTogglePlugs = directoryViewModel::togglePlugs,
-                onResetFilters = directoryViewModel::resetFilters,
-                onCafeClick = { id -> navController.navigate("directory/cafe/${android.net.Uri.encode(id)}") }
-            )
-        }
-
-        composable(NavRoutes.DIRECTORY_DETAIL) { entry ->
-            val directoryViewModel: DirectoryViewModel = viewModel()
-            DirectoryDetailScreen(
-                cafe = directoryViewModel.findCafe(entry.arguments?.getString("cafeId")),
-                onBack = { navController.popBackStack() }
+            FeaturePlaceholderScreen(
+                title = "Direktori Cafe",
+                owner = "Ossa Amelia Zuhra Lubis",
+                listComponent = "LazyVerticalGrid 2 kolom",
+                flows = listOf("List/Grid", "Detail Cafe", "Form Tambah/Edit")
             )
         }
 
         composable(NavRoutes.REVIEWS) {
-            ReviewsScreen(
-                onNavigateBack = { navController.popBackStack() },
+            FeaturePlaceholderScreen(
                 title = "Ulasan & Rating",
                 owner = "Shelfina Khayla Anindita",
                 listComponent = "HorizontalPager + LazyColumn",
@@ -130,14 +118,11 @@ fun AppNavHost(
             )
         }
 
+
         composable(NavRoutes.BOOKMARK) {
-            FeaturePlaceholderScreen(
-                title = "Saved Spot / Bookmark",
-                owner = "Shananda Putri Aisyah",
-                listComponent = "LazyColumn",
-                flows = listOf("Daftar Saved Spot", "Detail", "Form Catatan")
-            )
+            BookmarkScreen()
         }
+
 
         composable(NavRoutes.VIBE) {
             FeaturePlaceholderScreen(
