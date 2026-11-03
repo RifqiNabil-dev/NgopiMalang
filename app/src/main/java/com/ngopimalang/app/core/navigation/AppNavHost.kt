@@ -17,6 +17,7 @@ import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
+import com.ngopimalang.app.features.reviews.ReviewsScreen
 
 /**
  * Peta seluruh halaman aplikasi.
@@ -104,7 +105,8 @@ fun AppNavHost(
         }
 
         composable(NavRoutes.REVIEWS) {
-            FeaturePlaceholderScreen(
+            ReviewsScreen(
+                onNavigateBack = { navController.popBackStack() },
                 title = "Ulasan & Rating",
                 owner = "Shelfina Khayla Anindita",
                 listComponent = "HorizontalPager + LazyColumn",
