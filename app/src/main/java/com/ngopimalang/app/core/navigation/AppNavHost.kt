@@ -9,12 +9,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.ngopimalang.app.core.ui.FeaturePlaceholderScreen
 import com.ngopimalang.app.features.auth.AuthViewModel
 import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
+import com.ngopimalang.app.features.eventpromo.EventDetailScreen
+import com.ngopimalang.app.features.eventpromo.EventFormScreen
+import com.ngopimalang.app.features.eventpromo.EventPromoScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
 
@@ -131,11 +136,42 @@ fun AppNavHost(
         }
 
         composable(NavRoutes.EVENT_PROMO) {
-            FeaturePlaceholderScreen(
-                title = "Event & Promo Cafe",
-                owner = "Rifqi Nabil Al Fath",
-                listComponent = "LazyColumn",
-                flows = listOf("List Event & Promo", "Detail", "Form Tambah/Edit")
+            EventPromoScreen(
+                onEventClick = { eventId ->
+                    navController.navigate(NavRoutes.eventDetailRoute(eventId))
+                },
+                onAddEvent = {
+                    navController.navigate(NavRoutes.eventFormRoute())
+                }
+            )
+        }
+
+        composable(
+            route = NavRoutes.EVENT_DETAIL,
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventDetailScreen(
+                eventId = eventId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { id ->
+                    navController.navigate(NavRoutes.eventFormRoute(id))
+                }
+            )
+        }
+
+        composable(
+            route = NavRoutes.EVENT_FORM,
+            arguments = listOf(navArgument("eventId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId")
+            EventFormScreen(
+                eventId = eventId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
