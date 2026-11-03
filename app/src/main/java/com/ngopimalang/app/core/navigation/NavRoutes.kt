@@ -16,6 +16,11 @@ object NavRoutes {
     const val REVIEWS = "reviews"          // Shelfina - Ulasan & Rating
     const val BOOKMARK = "bookmark"        // Shananda - Saved Spot / Bookmark
     const val VIBE = "vibe"                // Evia - Kategori Vibe Cafe
+    const val VIBE_DETAIL = "vibe_detail/{vibeId}"
+    const val VIBE_FORM = "vibe_form?vibeId={vibeId}"
+    fun vibeDetail(vibeId: String) = "vibe_detail/$vibeId"
+    fun vibeForm(vibeId: String? = null) =
+        if (vibeId == null) "vibe_form" else "vibe_form?vibeId=$vibeId"
     const val EVENT_PROMO = "event_promo"  // Rifqi - Event & Promo Cafe
 
     /** Route yang tampil sebagai tab pada bottom navigation. */

@@ -4,19 +4,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.ngopimalang.app.core.ui.FeaturePlaceholderScreen
 import com.ngopimalang.app.features.auth.AuthViewModel
 import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
+import com.ngopimalang.app.features.vibe.VibeDetailScreen
+import com.ngopimalang.app.features.vibe.VibeFormScreen
+import com.ngopimalang.app.features.vibe.VibeScreen
+import com.ngopimalang.app.features.vibe.VibeViewModel
 
 /**
  * Peta seluruh halaman aplikasi.
@@ -121,15 +129,50 @@ fun AppNavHost(
             )
         }
 
-        composable(NavRoutes.VIBE) {
-            FeaturePlaceholderScreen(
-                title = "Kategori Vibe Cafe",
-                owner = "Evia Vinata",
-                listComponent = "HorizontalPager + TabRow",
-                flows = listOf("Daftar Vibe", "Detail Vibe", "Form Vibe")
+        composable(NavRoutes.VIBE) { entry ->
+            val vibeViewModel: VibeViewModel = viewModel(entry)
+            VibeScreen(
+                onCafeClick = { _ -> /* detail cafe menyusul */ },
+                onVibeDetail = { id -> navController.navigate(NavRoutes.vibeDetail(id)) },
+                onAddVibe = { navController.navigate(NavRoutes.vibeForm()) },
+                vibeViewModel = vibeViewModel
+            )
+        }
+        composable(
+            route = NavRoutes.VIBE_DETAIL,
+            arguments = listOf(navArgument("vibeId") { type = NavType.StringType })
+        ) { entry ->
+            val parentEntry = remember(entry) {
+                navController.getBackStackEntry(NavRoutes.VIBE)
+            }
+            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            VibeDetailScreen(
+                vibeId = entry.arguments?.getString("vibeId").orEmpty(),
+                onBack = { navController.popBackStack() },
+                onEdit = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
+                onCafeClick = { _ -> /* detail cafe menyusul */ },
+                vibeViewModel = vibeViewModel
             )
         }
 
+        composable(
+            route = NavRoutes.VIBE_FORM,
+            arguments = listOf(navArgument("vibeId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { entry ->
+            val parentEntry = remember(entry) {
+                navController.getBackStackEntry(NavRoutes.VIBE)
+            }
+            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            VibeFormScreen(
+                vibeId = entry.arguments?.getString("vibeId"),
+                onBack = { navController.popBackStack() },
+                vibeViewModel = vibeViewModel
+            )
+        }
         composable(NavRoutes.EVENT_PROMO) {
             FeaturePlaceholderScreen(
                 title = "Event & Promo Cafe",
