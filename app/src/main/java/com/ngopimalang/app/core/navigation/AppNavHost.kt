@@ -17,6 +17,7 @@ import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
+import com.ngopimalang.app.features.bookmark.BookmarkScreen
 
 /**
  * Peta seluruh halaman aplikasi.
@@ -112,14 +113,11 @@ fun AppNavHost(
             )
         }
 
+
         composable(NavRoutes.BOOKMARK) {
-            FeaturePlaceholderScreen(
-                title = "Saved Spot / Bookmark",
-                owner = "Shananda Putri Aisyah",
-                listComponent = "LazyColumn",
-                flows = listOf("Daftar Saved Spot", "Detail", "Form Catatan")
-            )
+            BookmarkScreen()
         }
+
 
         composable(NavRoutes.VIBE) {
             FeaturePlaceholderScreen(
