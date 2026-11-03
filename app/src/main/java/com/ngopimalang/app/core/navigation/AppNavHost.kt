@@ -17,7 +17,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ngopimalang.app.features.directory.DirectoryViewModel
 import com.ngopimalang.app.features.directory.DirectoryScreen
 import com.ngopimalang.app.features.directory.DirectoryDetailScreen
-import com.ngopimalang.app.core.ui.FeaturePlaceholderScreen
 import com.ngopimalang.app.features.auth.AuthViewModel
 import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
@@ -28,14 +27,12 @@ import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
 import com.ngopimalang.app.features.bookmark.BookmarkScreen
 import com.ngopimalang.app.features.reviews.ReviewsScreen
+import com.ngopimalang.app.features.vibe.VibeScreen
 
 /**
  * Peta seluruh halaman aplikasi.
  *
- * Cara menambah screen fitur (contoh untuk Event & Promo milik Rifqi):
- * 1. Buat screen di package features.eventpromo.
- * 2. Ganti pemanggilan [FeaturePlaceholderScreen] pada route [NavRoutes.EVENT_PROMO]
- *    dengan screen milikmu.
+ * Semua fitur anggota sudah terhubung dengan routing yang lengkap.
  */
 @Composable
 fun AppNavHost(
@@ -62,6 +59,7 @@ fun AppNavHost(
         startDestination = NavRoutes.LOGIN,
         modifier = modifier
     ) {
+        // ==================== AUTH ====================
         composable(NavRoutes.LOGIN) {
             LoginScreen(
                 state = authState,
@@ -83,6 +81,7 @@ fun AppNavHost(
             )
         }
 
+        // ==================== HOME & PROFILE ====================
         composable(NavRoutes.HOME) {
             HomeScreen(
                 userName = authState.name.ifBlank { "Ngopi Lover" },
@@ -104,40 +103,65 @@ fun AppNavHost(
             )
         }
 
-        // ---- Placeholder modul anggota, ganti dengan screen asli masing-masing ----
+        // ==================== DIREKTORI CAFE (Ossa) ====================
         composable(NavRoutes.DIRECTORY) {
-            FeaturePlaceholderScreen(
-                title = "Direktori Cafe",
-                owner = "Ossa Amelia Zuhra Lubis",
-                listComponent = "LazyVerticalGrid 2 kolom",
-                flows = listOf("List/Grid", "Detail Cafe", "Form Tambah/Edit")
+            val directoryViewModel: DirectoryViewModel = viewModel()
+            val state by directoryViewModel.uiState.collectAsStateWithLifecycle()
+            
+            DirectoryScreen(
+                state = state,
+                onSearchChange = directoryViewModel::onSearchChange,
+                onToggleWifi = directoryViewModel::toggleWifi,
+                onTogglePlugs = directoryViewModel::togglePlugs,
+                onResetFilters = directoryViewModel::resetFilters,
+                onCafeClick = { cafeId ->
+                    navController.navigate("directory/cafe/$cafeId")
+                }
             )
         }
 
+        composable(
+            route = NavRoutes.DIRECTORY_DETAIL,
+            arguments = listOf(navArgument("cafeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val cafeId = backStackEntry.arguments?.getString("cafeId")
+            val directoryViewModel: DirectoryViewModel = viewModel()
+            val cafe = directoryViewModel.findCafe(cafeId)
+            
+            DirectoryDetailScreen(
+                cafe = cafe,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ==================== ULASAN & RATING (Shelfina) ====================
         composable(NavRoutes.REVIEWS) {
-            FeaturePlaceholderScreen(
-                title = "Ulasan & Rating",
-                owner = "Shelfina Khayla Anindita",
-                listComponent = "HorizontalPager + LazyColumn",
-                flows = listOf("Daftar Ulasan", "Detail Ulasan", "Form Ulasan")
-            )
+            ReviewsScreen()
         }
 
-
+        // ==================== SAVED SPOT / BOOKMARK (Shananda) ====================
         composable(NavRoutes.BOOKMARK) {
             BookmarkScreen()
         }
 
-
+        // ==================== KATEGORI VIBE (Evia) ====================
         composable(NavRoutes.VIBE) {
-            FeaturePlaceholderScreen(
-                title = "Kategori Vibe Cafe",
-                owner = "Evia Vinata",
-                listComponent = "HorizontalPager + TabRow",
-                flows = listOf("Daftar Vibe", "Detail Vibe", "Form Vibe")
+            VibeScreen(
+                onCafeClick = { cafe ->
+                    navController.navigate("directory/cafe/${cafe.id}")
+                },
+                onVibeDetail = { vibeId ->
+                    // Placeholder: bisa dikembangkan jadi detail vibe page
+                    // Untuk Progress 1, cukup navigasi ke directory
+                    navController.navigate(NavRoutes.DIRECTORY)
+                },
+                onAddVibe = {
+                    // Placeholder: form tambah vibe (Progress 2)
+                }
             )
         }
 
+        // ==================== EVENT & PROMO (Rifqi/Nabil) ====================
         composable(NavRoutes.EVENT_PROMO) {
             EventPromoScreen(
                 onEventClick = { eventId ->
