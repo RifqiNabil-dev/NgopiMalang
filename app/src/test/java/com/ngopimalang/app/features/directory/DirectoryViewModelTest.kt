@@ -20,7 +20,7 @@ class DirectoryViewModelTest {
         model.toggleWifi()
         assertTrue(model.uiState.value.cafes.isEmpty())
         model.resetFilters()
-        assertEquals(6, model.uiState.value.cafes.size)
+        assertEquals(com.ngopimalang.app.core.data.DummyData.cafes.size, model.uiState.value.cafes.size)
         assertEquals("", model.uiState.value.query)
         assertFalse(model.uiState.value.wifiOnly)
         assertFalse(model.uiState.value.plugsOnly)
