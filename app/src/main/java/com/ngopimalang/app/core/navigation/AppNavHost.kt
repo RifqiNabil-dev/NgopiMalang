@@ -4,16 +4,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ngopimalang.app.features.directory.DirectoryViewModel
 import com.ngopimalang.app.features.directory.DirectoryScreen
 import com.ngopimalang.app.features.directory.DirectoryDetailScreen
@@ -25,9 +26,12 @@ import com.ngopimalang.app.features.eventpromo.EventFormScreen
 import com.ngopimalang.app.features.eventpromo.EventPromoScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
+import com.ngopimalang.app.features.vibe.VibeDetailScreen
+import com.ngopimalang.app.features.vibe.VibeFormScreen
+import com.ngopimalang.app.features.vibe.VibeScreen
+import com.ngopimalang.app.features.vibe.VibeViewModel
 import com.ngopimalang.app.features.bookmark.BookmarkScreen
 import com.ngopimalang.app.features.reviews.ReviewsScreen
-import com.ngopimalang.app.features.vibe.VibeScreen
 
 /**
  * Peta seluruh halaman aplikasi.
@@ -145,23 +149,48 @@ fun AppNavHost(
         }
 
         // ==================== KATEGORI VIBE (Evia) ====================
-        composable(NavRoutes.VIBE) {
+        composable(NavRoutes.VIBE) { entry ->
+            val vibeViewModel: VibeViewModel = viewModel(entry)
             VibeScreen(
-                onCafeClick = { cafe ->
-                    navController.navigate("directory/cafe/${cafe.id}")
-                },
-                onVibeDetail = { vibeId ->
-                    // Placeholder: bisa dikembangkan jadi detail vibe page
-                    // Untuk Progress 1, cukup navigasi ke directory
-                    navController.navigate(NavRoutes.DIRECTORY)
-                },
-                onAddVibe = {
-                    // Placeholder: form tambah vibe (Progress 2)
-                }
+                onCafeClick = { cafe -> navController.navigate("directory/cafe/${cafe.id}") },
+                onVibeDetail = { id -> navController.navigate(NavRoutes.vibeDetail(id)) },
+                onAddVibe = { navController.navigate(NavRoutes.vibeForm()) },
+                vibeViewModel = vibeViewModel
+            )
+        }
+        composable(
+            route = NavRoutes.VIBE_DETAIL,
+            arguments = listOf(navArgument("vibeId") { type = NavType.StringType })
+        ) { entry ->
+            val parentEntry = remember(entry) { navController.getBackStackEntry(NavRoutes.VIBE) }
+            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            VibeDetailScreen(
+                vibeId = entry.arguments?.getString("vibeId").orEmpty(),
+                onBack = { navController.popBackStack() },
+                onEdit = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
+                onCafeClick = { cafe -> navController.navigate("directory/cafe/${cafe.id}") },
+                vibeViewModel = vibeViewModel
+            )
+        }
+        composable(
+            route = NavRoutes.VIBE_FORM,
+            arguments = listOf(navArgument("vibeId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { entry ->
+            val parentEntry = remember(entry) { navController.getBackStackEntry(NavRoutes.VIBE) }
+            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            VibeFormScreen(
+                vibeId = entry.arguments?.getString("vibeId"),
+                onBack = { navController.popBackStack() },
+                vibeViewModel = vibeViewModel
             )
         }
 
         // ==================== EVENT & PROMO (Rifqi/Nabil) ====================
+
         composable(NavRoutes.EVENT_PROMO) {
             EventPromoScreen(
                 onEventClick = { eventId ->
