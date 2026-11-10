@@ -11,39 +11,64 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = DarkCoffeePrimary,
+    onPrimary = DarkCoffeeOnPrimary,
+    primaryContainer = DarkCoffeePrimaryContainer,
+    onPrimaryContainer = DarkCoffeeOnPrimaryContainer,
+    secondary = DarkCoffeeSecondary,
+    onSecondary = DarkCoffeeOnSecondary,
+    secondaryContainer = DarkCoffeeSecondaryContainer,
+    onSecondaryContainer = DarkCoffeeOnSecondaryContainer,
+    tertiary = DarkCoffeeTertiary,
+    onTertiary = DarkCoffeeOnTertiary,
+    tertiaryContainer = DarkCoffeeTertiaryContainer,
+    onTertiaryContainer = DarkCoffeeOnTertiaryContainer,
+    background = DarkCoffeeBackground,
+    onBackground = DarkCoffeeOnBackground,
+    surface = DarkCoffeeSurface,
+    onSurface = DarkCoffeeOnSurface,
+    surfaceVariant = DarkCoffeeSurfaceVariant,
+    onSurfaceVariant = DarkCoffeeOnSurfaceVariant,
+    surfaceContainerLow = DarkCoffeeSurfaceContainerLow,
+    outline = DarkCoffeeOutline,
+    outlineVariant = DarkCoffeeOutlineVariant
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = CoffeePrimary,
+    onPrimary = CoffeeOnPrimary,
+    primaryContainer = CoffeePrimaryContainer,
+    onPrimaryContainer = CoffeeOnPrimaryContainer,
+    secondary = CoffeeSecondary,
+    onSecondary = CoffeeOnSecondary,
+    secondaryContainer = CoffeeSecondaryContainer,
+    onSecondaryContainer = CoffeeOnSecondaryContainer,
+    tertiary = CoffeeTertiary,
+    onTertiary = CoffeeOnTertiary,
+    tertiaryContainer = CoffeeTertiaryContainer,
+    onTertiaryContainer = CoffeeOnTertiaryContainer,
+    background = CoffeeBackground,
+    onBackground = CoffeeOnBackground,
+    surface = CoffeeSurface,
+    onSurface = CoffeeOnSurface,
+    surfaceVariant = CoffeeSurfaceVariant,
+    onSurfaceVariant = CoffeeOnSurfaceVariant,
+    surfaceContainerLow = CoffeeSurfaceContainerLow,
+    outline = CoffeeOutline,
+    outlineVariant = CoffeeOutlineVariant
 )
 
 /**
  * Tema utama aplikasi NgopiMalang.
  *
- * Warna diambil dari [LightColorScheme] / [DarkColorScheme] di atas, yang sumbernya
- * dari file Color.kt. Semua layar WAJIB memakai `MaterialTheme.colorScheme.*`,
- * jangan menulis warna hex langsung di dalam layar.
+ * Mengusung tema hangat kopi & coklat (Co/Choc Style) yang konsisten di seluruh layar.
+ * [dynamicColor] disetel false agar tema warna kopi selalu aktif dan tidak ditimpa
+ * wallpaper sistem pada Android 12+.
  */
 @Composable
 fun NgopiMalangTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -51,7 +76,6 @@ fun NgopiMalangTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
