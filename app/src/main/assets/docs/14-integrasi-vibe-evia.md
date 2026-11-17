@@ -4,12 +4,10 @@ Dokumen ini berisi **apa yang harus dibuat dan diubah** di kode fitur Kategori V
 
 | Urusan | Dikerjakan oleh |
 |---|---|
-| Membuat tabel, view, policy, data awal vibe | **Nabil** — lihat [09-skema-database.md](09-skema-database.md) |
-| Dependency Gradle, `SupabaseClient`, `ApiError` | **Nabil** — sekali untuk semua fitur |
 | Kode fitur Kategori Vibe | **Evia** (dokumen ini) |
 | Layar detail cafe | **Ossa** pemilik; kamu hanya mengirim `cafeId` saat kartu diklik |
 
-Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, ajukan ke Nabil.
+Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, info saja di grub.
 
 ---
 
@@ -19,10 +17,9 @@ Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, ajukan ke Nabil.
 |---|---|
 | `SupabaseClient.kt` dan `ApiError.kt` sudah ada | Bisa login dengan akun demo |
 | `AuthUiState.role` terisi `"admin"`/`"user"` | Label peran di profil tampil benar |
-| Tabel `vibes`, `cafe_vibes`, view `vibes_with_count` dan `cafes_with_rating` sudah ada | Dikonfirmasi Nabil |
+| Tabel `vibes`, `cafe_vibes`, view `vibes_with_count` dan `cafes_with_rating` sudah ada | Sudah ada |
 | Tujuh vibe awal sudah terisi | Tab vibe muncul tanpa kamu mengisi data |
 
-Tujuh vibe awal itu **isian awal (shortcut)**, bukan batas. Bila tabel masih kosong, minta Nabil menjalankan seed dulu supaya nama kategori sama di semua layar. Setelah itu kamu bebas menambah, mengubah, dan menghapus vibe lewat aplikasi — jumlah vibe tidak dibatasi.
 
 ---
 
@@ -394,5 +391,5 @@ Relasi ditulis setelah vibe punya `id`. Untuk data baru, `id` diambil dari hasil
 | `Cafe`, `CafeCard` | milik Ossa; jangan diubah dari fitur Vibe |
 | Tabel `cafes` | baca saja; jangan menulis dari fitur Vibe |
 | `cafe_vibes` | milikmu untuk ditulis, tetapi bentuk kolomnya jangan diubah |
-| Data awal vibe | milik Nabil; jangan menambah lewat SQL |
+| Data awal vibe | jangan menambah lewat SQL |
 | `ReviewSection`, `BookmarkAction` | milik Shelfina dan Shananda; jangan dipasang di layar Vibe |

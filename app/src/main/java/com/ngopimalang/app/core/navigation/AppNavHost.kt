@@ -101,6 +101,7 @@ fun AppNavHost(
             ProfileScreen(
                 userName = authState.name.ifBlank { "Ngopi Lover" },
                 userEmail = authState.email.ifBlank { "belum-ada-email@ngopimalang.app" },
+                isAdmin = authState.isAdmin,
                 onOpenBookmark = { navController.navigate(NavRoutes.BOOKMARK) },
                 onOpenReviews = { navController.navigate(NavRoutes.REVIEWS) },
                 onLogout = authViewModel::logout

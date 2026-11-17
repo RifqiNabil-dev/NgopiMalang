@@ -2,7 +2,6 @@
 
 Dokumen ini adalah rancangan final database untuk aplikasi NgopiMalang pada Progress 2, sudah disesuaikan dengan keputusan kelompok sampai saat ini:
 
-- Struktur tabel mengikuti `Skema Database NgopiMalang.pdf` dari dosen (nama tabel, kolom, relasi, tipe data).
 - Ditambah dua view untuk rating dan jumlah cafe per vibe, supaya tidak ada angka yang disimpan ganda.
 - Hak akses memakai satu model: **admin satu-satunya penulis katalog**, **user memiliki data pribadinya sendiri** (ulasan dan bookmark).
 - Sisi kode mengikuti [10-panduan-integrasi.md](10-panduan-integrasi.md): repository per fitur, satu `UiState`, detail cafe satu layar.
@@ -184,161 +183,6 @@ Index yang dibuat (selain PK dan unique):
 | `cafe_vibes_vibe_id_idx` pada `(vibe_id)` | Cafe per vibe |
 
 ---
-
-## 7. SQL: tabel, trigger, dan index
-
-Tempel berurutan di SQL Editor.
-
-```sql
--- 1. Extension
-create extension if not exists pgcrypto;
-
--- 2. Fungsi updated_at
-create or replace function public.set_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
-
--- 3. profiles
-create table if not exists public.profiles (
-  id          uuid primary key references auth.users (id) on delete cascade,
-  display_name text not null default 'Pengguna',
-  avatar_path text,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
-
--- 4. user_roles
-create table if not exists public.user_roles (
-  user_id    uuid primary key references public.profiles (id) on delete cascade,
-  role       text not null default 'user' check (role in ('user', 'admin')),
-  granted_at timestamptz not null default now()
-);
-
--- 5. cafes
-create table if not exists public.cafes (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  address     text not null default '',
-  description text not null default '',
-  open_hours  text not null default '',
-  price_min   integer,
-  price_max   integer,
-  has_wifi    boolean not null default false,
-  plug_count  integer not null default 0,
-  photo_path  text,
-  is_active   boolean not null default true,
-  created_by  uuid references public.profiles (id) on delete set null,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now(),
-  constraint cafes_price_range check (
-    price_min is null or price_max is null or price_min <= price_max
-  ),
-  constraint cafes_plug_count check (plug_count >= 0)
-);
-
-create unique index if not exists cafes_name_unique
-  on public.cafes (lower(btrim(name)));
-create index if not exists cafes_is_active_idx on public.cafes (is_active);
-
--- 6. vibes
-create table if not exists public.vibes (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  icon_key    text not null default 'work',
-  description text not null default '',
-  created_by  uuid references public.profiles (id) on delete set null,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
-
-create unique index if not exists vibes_name_unique
-  on public.vibes (lower(btrim(name)));
--- icon_key sengaja tidak unik: form tambah vibe memilih dari daftar kunci ikon
--- yang sudah dipakai seed, jadi index unik akan menolak vibe baru (23505).
-create index if not exists vibes_icon_key_idx on public.vibes (icon_key);
-
--- 7. cafe_vibes
-create table if not exists public.cafe_vibes (
-  cafe_id    uuid not null references public.cafes (id) on delete cascade,
-  vibe_id    uuid not null references public.vibes (id) on delete cascade,
-  created_at timestamptz not null default now(),
-  primary key (cafe_id, vibe_id)
-);
-
-create index if not exists cafe_vibes_vibe_id_idx on public.cafe_vibes (vibe_id);
-
--- 8. event_promos
-create table if not exists public.event_promos (
-  id           uuid primary key default gen_random_uuid(),
-  cafe_id      uuid references public.cafes (id) on delete restrict,
-  title        text not null,
-  description  text not null default '',
-  category     text not null default 'event' check (category in ('event', 'promo')),
-  starts_at    timestamptz not null,
-  ends_at      timestamptz not null,
-  price_min    integer,
-  price_max    integer,
-  is_published boolean not null default true,
-  created_by   uuid references public.profiles (id) on delete set null,
-  created_at   timestamptz not null default now(),
-  updated_at   timestamptz not null default now(),
-  constraint event_promos_time_order check (ends_at > starts_at),
-  constraint event_promos_price_range check (
-    price_min is null or price_max is null or price_min <= price_max
-  )
-);
-
-create index if not exists event_promos_ends_at_idx on public.event_promos (ends_at);
-create index if not exists event_promos_cafe_id_idx on public.event_promos (cafe_id);
-
--- 9. reviews
-create table if not exists public.reviews (
-  id            uuid primary key default gen_random_uuid(),
-  user_id       uuid not null references public.profiles (id) on delete restrict,
-  cafe_id       uuid not null references public.cafes (id) on delete restrict,
-  rating        smallint not null check (rating between 1 and 5),
-  comment       text not null default '',
-  favorite_menu text not null default '',
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now(),
-  constraint reviews_one_per_user_cafe unique (user_id, cafe_id)
-);
-
-create index if not exists reviews_cafe_id_idx on public.reviews (cafe_id);
-
--- 10. bookmarks
-create table if not exists public.bookmarks (
-  id         uuid primary key default gen_random_uuid(),
-  user_id    uuid not null references public.profiles (id) on delete restrict,
-  cafe_id    uuid not null references public.cafes (id) on delete restrict,
-  note       text not null default '',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint bookmarks_one_per_user_cafe unique (user_id, cafe_id)
-);
-
-create index if not exists bookmarks_user_id_idx on public.bookmarks (user_id);
-
--- 11. Trigger updated_at
-do $$
-declare t text;
-begin
-  foreach t in array array['profiles','cafes','vibes','event_promos','reviews','bookmarks']
-  loop
-    execute format(
-      'drop trigger if exists set_updated_at on public.%I;
-       create trigger set_updated_at before update on public.%I
-       for each row execute function public.set_updated_at();', t, t);
-  end loop;
-end;
-$$;
-```
 
 ### 7.1 Profil otomatis saat register
 
@@ -601,45 +445,6 @@ create policy bookmarks_delete_self on public.bookmarks
 | `cafe-photos` | ya (baca) | 5 MB | JPEG, PNG, WebP | `{cafe_id}/{uuid}.jpg` |
 | `avatars` | ya (baca) | 2 MB | JPEG, PNG | `{user_id}/avatar.jpg` |
 
-Jalur foto cafe memakai `cafe_id`, bukan `user_id`, karena foto itu milik cafe dan tetap valid walau admin yang mengunggah berganti.
-
-```sql
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values
-  ('cafe-photos', 'cafe-photos', true, 5242880, array['image/jpeg','image/png','image/webp']),
-  ('avatars', 'avatars', true, 2097152, array['image/jpeg','image/png'])
-on conflict (id) do nothing;
-
--- baca untuk semua yang login
-drop policy if exists cafe_photos_read on storage.objects;
-create policy cafe_photos_read on storage.objects
-  for select to authenticated using (bucket_id = 'cafe-photos');
-
--- tulis hanya admin
-drop policy if exists cafe_photos_insert_admin on storage.objects;
-create policy cafe_photos_insert_admin on storage.objects
-  for insert to authenticated with check (bucket_id = 'cafe-photos' and public.is_admin());
-
-drop policy if exists cafe_photos_update_admin on storage.objects;
-create policy cafe_photos_update_admin on storage.objects
-  for update to authenticated
-  using (bucket_id = 'cafe-photos' and public.is_admin())
-  with check (bucket_id = 'cafe-photos' and public.is_admin());
-
-drop policy if exists cafe_photos_delete_admin on storage.objects;
-create policy cafe_photos_delete_admin on storage.objects
-  for delete to authenticated using (bucket_id = 'cafe-photos' and public.is_admin());
-
--- avatar: hanya pemilik folder
-drop policy if exists avatars_read on storage.objects;
-create policy avatars_read on storage.objects
-  for select to authenticated using (bucket_id = 'avatars');
-
-drop policy if exists avatars_write_self on storage.objects;
-create policy avatars_write_self on storage.objects
-  for insert to authenticated
-  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
-```
 
 ### 10.1 Alur ganti foto cafe
 
@@ -655,55 +460,6 @@ Storage dan tabel tidak punya transaksi bersama, jadi urutannya harus jelas dan 
 
 ---
 
-## 11. Query yang dipakai aplikasi
-
-Semua contoh di bawah berada di dalam repository fitur masing-masing, bukan di layar.
-
-```kotlin
-// Direktori: daftar cafe aktif + rating
-client.from("cafes_with_rating").select {
-    filter { eq("is_active", true) }
-    if (query.isNotBlank()) filter { ilike("name", "%$query%") }
-    order("name", Order.ASCENDING)
-}.decodeList<CafeDto>()
-
-// Detail cafe dibuka dari mana pun (Direktori, Vibe, Bookmark, Event)
-client.from("cafes_with_rating").select {
-    filter { eq("id", cafeId) }
-}.decodeSingle<CafeDto>()
-
-// Vibe: daftar + jumlah cafe
-client.from("vibes_with_count").select().order("name").decodeList<VibeDto>()
-
-// Vibe tertentu: cafe di dalamnya
-client.from("cafe_vibes").select(Columns.raw("cafes_with_rating(*)")) {
-    filter { eq("vibe_id", vibeId) }
-}.decodeList<CafeVibeDto>()
-
-// Ulasan per cafe, lengkap dengan nama penulis
-client.from("reviews").select(Columns.raw("*, profiles:user_id(display_name)")) {
-    filter { eq("cafe_id", cafeId) }
-    order("created_at", Order.DESCENDING)
-    limit(50)
-}.decodeList<ReviewDto>()
-
-// Simpan ulasan: upsert, karena (user_id, cafe_id) unik
-client.from("reviews").upsert(
-    ReviewRow(cafe_id = cafeId, user_id = uid, rating = stars, comment = text)
-) { onConflict = "user_id,cafe_id" }
-
-// Bookmark: tambah, ubah catatan, hapus
-client.from("bookmarks").upsert(BookmarkRow(cafe_id = cafeId, user_id = uid, note = note)) {
-    onConflict = "user_id,cafe_id"
-}
-client.from("bookmarks").delete { filter { eq("cafe_id", cafeId); eq("user_id", uid) } }
-
-// Event yang masih berlaku
-client.from("event_promos").select {
-    filter { eq("is_published", true); gt("ends_at", now) }
-    order("starts_at", Order.ASCENDING)
-}.decodeList<EventPromoDto>()
-```
 
 ### 11.1 Detail cafe dipakai bersama
 
@@ -785,19 +541,7 @@ Urutannya penting: akun dibuat lewat Auth lebih dulu, baru role-nya dinaikkan.
 | 3 | SQL Editor | Naikkan role menjadi `admin` |
 | 4 | Aplikasi | Login dengan akun itu, tombol tulis katalog muncul |
 
-```sql
--- langkah 2: jaring pengaman bila profil belum ada
-insert into public.profiles (id, display_name)
-select id, 'Admin NgopiMalang' from auth.users
-where email = 'ALAMAT_EMAIL_ADMIN'
-on conflict (id) do nothing;
 
--- langkah 3: naikkan role
-insert into public.user_roles (user_id, role)
-select id, 'admin' from auth.users
-where email = 'ALAMAT_EMAIL_ADMIN'
-on conflict (user_id) do update set role = 'admin';
-```
 
 Jangan menulis kata sandi di repo, README, atau dokumen ini. Simpan di catatan grup.
 
@@ -822,40 +566,7 @@ from (values
 on conflict do nothing;
 ```
 
-Ganti `ALAMAT_EMAIL_ADMIN` dengan email admin. `on conflict do nothing` membuat SQL ini aman dijalankan dua kali.
-
 Cafe, relasi vibe, dan event **tidak** di-seed lewat SQL. Isi dari aplikasi dengan akun admin, sekalian menguji Insert dan unggah foto.
-
----
-
-## 14. Best practice: mana yang dibawa ke presentasi
-
-Empat poin berikut bisa ditunjukkan dalam 30 detik. Sisanya checklist internal, jangan diucapkan di depan kelas karena tidak akan ada waktu membuktikannya.
-
-| No | Poin | Cara menunjukkan |
-|---|---|---|
-| 1 | Hak akses dijaga database, bukan aplikasi | Login akun user, tombol tambah tidak ada; panggil insert langsung, ditolak `42501` |
-| 2 | Rating dihitung, bukan disimpan | Tambah ulasan, angka rating cafe berubah tanpa mengubah tabel `cafes` |
-| 3 | Relasi lewat `cafe_id`, bukan teks nama | Ubah nama cafe, ulasan dan bookmark lama tetap menempel |
-| 4 | Arsip, bukan hapus | Hapus cafe yang sudah diulas → aplikasi menawarkan arsip, data ulasan tetap ada |
-
-Checklist internal (untuk menjaga kualitas, bukan untuk dibacakan):
-
-- [ ] `pgcrypto` aktif; semua PK `uuid` punya default.
-- [ ] `updated_at` terisi otomatis lewat trigger, bukan dari aplikasi.
-- [ ] Semua tabel ber-RLS; tidak ada tabel tanpa policy.
-- [ ] Policy dipisah per operasi; tidak ada `for all`.
-- [ ] Tidak ada policy tulis pada `user_roles`.
-- [ ] `is_admin()` memakai `security definer` dan `search_path` tetap.
-- [ ] View memakai `security_invoker = true`.
-- [ ] Unique `(user_id, cafe_id)` ada di `reviews` dan `bookmarks`.
-- [ ] Nama vibe unik tanpa peduli huruf besar/kecil.
-- [ ] FK ke `cafes` memakai `RESTRICT`, relasi `cafe_vibes` memakai `CASCADE`.
-- [ ] Foto disimpan sebagai path di tabel, file di Storage.
-- [ ] Anon key di `BuildConfig`; service role key tidak ada di repo.
-- [ ] Query daftar memakai `limit`/`range`.
-- [ ] Kode error diterjemahkan di satu tempat (`ApiError`).
-- [ ] Tidak ada `select *` pada view untuk data yang tidak ditampilkan.
 
 ---
 
@@ -882,113 +593,8 @@ Dijalankan setelah SQL selesai dan aplikasi sudah memakai repository. Kolom "has
 
 ---
 
-## 16. Tugas per anggota untuk skema
 
-Dokumen ini menyiapkan database. Yang berikut adalah bagian tiap anggota setelah SQL dijalankan.
-
-| Anggota | Tugas | Selesai bila |
-|---|---|---|
-| Ketua tim | Jalankan SQL bagian 7–10, buat akun admin, seed vibe | Semua tabel, view, policy, bucket ada; login admin berhasil |
-| Ossa (Direktori) | Repository cafe + mapper; sesuaikan model `Cafe`; upload/ganti foto; arsip | Insert, update, arsip, unggah foto berhasil dari aplikasi |
-| Shelfina (Ulasan) | Repository ulasan + mapper; upsert ulasan; baca rata-rata dari view | Satu ulasan per user per cafe; angka rating berubah |
-| Shananda (Bookmark) | Repository bookmark; toggle + catatan; baca dengan join `cafes_with_rating` | Simpanan tampil dengan data cafe lengkap |
-| Evia (Vibe) | Repository vibe; baca `vibes_with_count`; tulis `vibes` dan `cafe_vibes` | Jumlah cafe per vibe benar setelah cafe diarsipkan |
-| Nabil (Event) | Repository event; filter `is_published` + `ends_at`; tulis event | Badge status sesuai waktu; event lewat tidak tampil |
-
-Semua anggota memakai satu `SupabaseClient` dan satu `ApiError`. Tidak ada yang membuat client sendiri.
-
----
-
-## 17. Urutan pengerjaan
-
-| Tahap | Pekerjaan | Perkiraan |
-|---|---|---|
-| 1 | Sepakati perubahan model di bagian 5 | 15 menit rapat |
-| 2 | Jalankan SQL 7–10, buat akun admin, seed vibe | 30 menit |
-| 3 | Buat `SupabaseClient.kt` dan `ApiError.kt` | 30 menit |
-| 4 | Ossa menyelesaikan Direktori lebih dulu sebagai contoh pola | 1 hari |
-| 5 | Anggota lain menyalin pola ke fiturnya masing-masing | 1 hari |
-| 6 | Pasang slot di `DirectoryDetailScreen` (ulasan, bookmark) | 30 menit |
-| 7 | Jalankan tabel uji bagian 15 | 1 jam rapat |
-| 8 | Hapus `DummyData` dan file mati (lihat dokumen 10 bagian 11) | 15 menit |
-
-Tahap 4 dikerjakan lebih dulu bukan karena Direktori lebih penting, tetapi karena jalur data butuh satu contoh nyata agar lima orang tidak menebak-nebak bentuk repository.
----
-
-## Lampiran A — Urutan eksekusi SQL
-
-Jalankan di **SQL Editor** satu blok sekali, berurutan. Jangan menempel semuanya sekaligus, karena bila satu blok gagal, blok berikutnya ikut berhenti dan sulit dilacak.
-
-| Blok | Isi | Bagian dokumen |
-|---|---|---|
-| 1 | Extension + fungsi `set_updated_at` | 7 |
-| 2 | Tabel `profiles`, `user_roles` | 7 |
-| 3 | Tabel `cafes`, `vibes`, `cafe_vibes` | 7 |
-| 4 | Tabel `event_promos`, `reviews`, `bookmarks` | 7 |
-| 5 | Index dan trigger `updated_at` | 7 |
-| 6 | Trigger `handle_new_user` | 7.1 |
-| 7 | View `cafes_with_rating`, `vibes_with_count` | 8 |
-| 8 | Fungsi `is_admin()` | 9.1 |
-| 9 | `enable row level security` + seluruh policy | 9.2–9.3 |
-| 10 | Bucket dan policy Storage | 10 |
-| 11 | Akun admin (role) + seed vibe | 13 |
-
-### Verifikasi cepat setelah selesai
-
-```sql
--- 8 tabel, 2 view
-select table_name, table_type
-from information_schema.tables
-where table_schema = 'public'
-  and table_name in ('profiles','user_roles','cafes','vibes','cafe_vibes',
-                     'event_promos','reviews','bookmarks',
-                     'cafes_with_rating','vibes_with_count')
-order by table_type, table_name;
-
--- semua tabel harus rowsecurity = true
-select tablename, rowsecurity
-from pg_tables where schemaname = 'public'
-order by tablename;
-
--- jumlah policy per tabel
-select tablename, count(*) as policies
-from pg_policies where schemaname = 'public'
-group by tablename order by tablename;
-
--- bucket harus 2
-select id, public, file_size_limit from storage.buckets
-where id in ('cafe-photos','avatars');
-
--- role admin harus 1
-select u.email, r.role
-from public.user_roles r join auth.users u on u.id = r.user_id
-where r.role = 'admin';
-```
-
-Yang diharapkan: `rowsecurity` bernilai `true` untuk 8 tabel, `user_roles` punya **1** policy (select), `bookmarks` punya 4 policy yang semuanya memakai `auth.uid()`, dan hanya ada satu baris role `admin`.
-
----
-
-## Lampiran B — Ringkasan policy untuk audit
-
-| Tabel | Select | Insert | Update | Delete |
-|---|---|---|---|---|
-| `profiles` | semua user login | milik sendiri | milik sendiri | — |
-| `user_roles` | milik sendiri | — | — | — |
-| `cafes` | aktif, atau semua bila admin | admin | admin | admin |
-| `vibes` | semua user login | admin | admin | admin |
-| `cafe_vibes` | semua user login | admin | — | admin |
-| `event_promos` | terbit, atau semua bila admin | admin | admin | admin |
-| `reviews` | semua user login | milik sendiri | milik sendiri | milik sendiri |
-| `bookmarks` | milik sendiri | milik sendiri | milik sendiri | milik sendiri |
-| `storage.objects` (`cafe-photos`) | semua user login | admin | admin | admin |
-| `storage.objects` (`avatars`) | semua user login | folder sendiri | — | — |
-
-Tanda "—" berarti tidak ada policy, sehingga operasi itu **selalu ditolak**. Itu disengaja.
-
----
-
-## Lampiran C — Peta objek database ke kode
+## Lampiran A — Peta objek database ke kode
 
 | Objek database | Model Kotlin | File model | Dipakai layar |
 |---|---|---|---|
@@ -1006,15 +612,3 @@ Aturan pemetaan:
 - Waktu selalu `Instant` di model, label dibuat di UI.
 
 ---
-
-## Lampiran D — Hal yang sengaja tidak dipakai
-
-| Tidak dipakai | Alasan | Kapan dipertimbangkan |
-|---|---|---|
-| `pg_trgm` / full-text search | Data awal ±12 baris; `ilike` cukup | Bila cafe > 500 baris |
-| Kolom `rating` di `cafes` | Sumber ketidaksinkronan | Tidak, selama rating dari ulasan |
-| Tabel `event_categories` | Hanya dua nilai, cukup `check` | Bila kategori akan dikelola admin |
-| Soft delete di semua tabel | Hanya cafe yang butuh arsip | Bila event perlu riwayat |
-| Bucket privat + signed URL | Foto katalog memang publik | Bila ada foto yang sensitif |
-| Realtime subscription | Tidak dinilai, menambah kerumitan | Bila demo butuh daftar berubah sendiri |
-| Edge Function untuk admin | RLS sudah cukup; menambah lapisan yang harus dijelaskan | Bila butuh operasi lintas tabel yang atomik |

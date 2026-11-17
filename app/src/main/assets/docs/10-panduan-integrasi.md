@@ -55,8 +55,8 @@ Tidak ada folder yang dihapus. Yang berubah adalah isi dan tambahan file di dala
 
 | File | Isi minimal | Dibuat oleh |
 |---|---|---|
-| `core/data/SupabaseClient.kt` | `createSupabaseClient` dengan URL + anon key dari `BuildConfig`, satu instance dipakai bersama | Ketua tim, sekali saja |
-| `core/data/ApiError.kt` | Fungsi yang menerjemahkan kode `42501`, `23503`, `23505`, `23514`, `PGRST116`, `401` menjadi kalimat yang bisa dibaca pengguna | Ketua tim, sekali saja |
+| `core/data/SupabaseClient.kt` | `createSupabaseClient` dengan URL + anon key dari `BuildConfig`, satu instance dipakai bersama | satu orang saja |
+| `core/data/ApiError.kt` | Fungsi yang menerjemahkan kode `42501`, `23503`, `23505`, `23514`, `PGRST116`, `401` menjadi kalimat yang bisa dibaca pengguna | satu orang saja |
 | `features/<fitur>/<Fitur>Repository.kt` | Fungsi baca dan tulis untuk tabel milik fitur itu saja | Tiap anggota |
 | `features/<fitur>/<Fitur>Mapper.kt` | `fromRow(...)` dan `toRow(...)` | Tiap anggota |
 | `features/reviews/ReviewSection.kt` | Composable mandiri untuk dipasang di layar detail cafe | Shelfina |
@@ -225,7 +225,7 @@ Aturannya satu: **pemilik layar menyediakan slot, pemilik fitur mengisi slot.** 
 |---|---|---|---|
 | `DirectoryDetailScreen.kt` | Ossa | `ReviewSection(cafeId)` | Shelfina — `features/reviews/ReviewSection.kt` |
 | `DirectoryDetailScreen.kt` | Ossa | `BookmarkAction(cafeId)` | Shananda — `features/bookmark/BookmarkAction.kt` |
-| `DirectoryDetailScreen.kt` | Ossa | Tautan ke event cafe | Nabil, bila disepakati |
+| `DirectoryDetailScreen.kt` | Ossa | Tautan ke event cafe | bila disepakati |
 | `CafeCard.kt` (`core/components/`) | bersama | Tidak ada slot; perubahan di sini menyentuh beranda, direktori, dan bookmark sekaligus | hanya dengan kesepakatan tim |
 
 Ketentuan teknis slot:
@@ -283,28 +283,7 @@ Kerjakan berurutan. Jangan melompat ke UI sebelum langkah 3 selesai, karena UI y
 
 ---
 
-## 10. Menjawab pertanyaan dosen
-
-### Skrip enam langkah
-
-> "Layar hanya mengirim event ke ViewModel. ViewModel memanggil repository, dan hanya repository yang bicara ke Supabase. Repository mengembalikan baris tabel, mapper mengubahnya jadi model yang dipakai UI, hasilnya masuk ke satu `UiState`. Layar meng-`collect` state itu lewat `collectAsStateWithLifecycle`, jadi setiap perubahan state otomatis menggambar ulang daftar. Hak akses tidak diperiksa di aplikasi, tetapi di RLS database, sehingga aplikasi tidak bisa melewatinya."
-
-### Pertanyaan lanjutan dan jawabannya
-
-| Pertanyaan | Jawaban |
-|---|---|
-| "Kenapa perlu repository, tidak langsung di ViewModel?" | Supaya satu tabel punya satu tempat query. Saat ada perubahan kolom, hanya satu file disentuh, dan jalur data punya titik yang bisa ditunjuk |
-| "Kenapa datanya dummy di Progress 1?" | Karena pada Progress 1 yang dinilai adalah alur layar dan state; Progress 2 mengganti sumbernya ke Supabase tanpa mengubah layar, karena layar tidak pernah memegang data |
-| "Bagaimana hak akses dijaga?" | Admin adalah satu-satunya penulis katalog lewat policy RLS; user hanya bisa menulis baris miliknya sendiri di `reviews` dan `bookmarks` |
-| "Kenapa rating tidak disimpan di tabel cafe?" | Rating adalah hasil hitung ulasan; disimpan berarti bisa tidak sinkron. Dipakai view `cafes_with_rating` |
-| "Kenapa hapus cafe jadi arsip?" | Relasi memakai `ON DELETE RESTRICT`; arsip menjaga riwayat ulasan dan bookmark tetap utuh |
-| "Apa bukti hak aksesnya benar?" | Demo dengan akun user: tombol tambah tidak muncul, dan percobaan menulis langsung ditolak database (kode `42501`) |
-
-Aturan menjawab: jangan menyebut hal yang tidak bisa ditunjukkan dalam 30 detik demo. Checklist internal boleh panjang, penjelasan ke dosen cukup enam langkah di atas.
-
----
-
-## 11. Urutan menghapus file lama
+## 10. Urutan menghapus file lama
 
 Jangan dihapus lebih awal, karena akan memutus build anggota lain yang belum selesai.
 
@@ -318,7 +297,7 @@ Jangan dihapus lebih awal, karena akan memutus build anggota lain yang belum sel
 
 ---
 
-## 12. Checklist demo Progress 2
+## 11. Checklist demo Progress 2
 
 | No | Yang ditunjukkan | Berhasil bila |
 |---|---|---|

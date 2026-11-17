@@ -4,12 +4,10 @@ Dokumen ini berisi **apa yang harus dibuat dan diubah** di kode fitur Bookmark s
 
 | Urusan | Dikerjakan oleh |
 |---|---|
-| Membuat tabel, view, policy, akun demo | **Nabil** — lihat [09-skema-database.md](09-skema-database.md) |
-| Dependency Gradle, `SupabaseClient`, `ApiError` | **Nabil** — sekali untuk semua fitur |
 | Kode fitur Bookmark | **Shananda** (dokumen ini) |
 | Slot di layar detail cafe | **Ossa** memasang, **Shananda** mengisi |
 
-Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, ajukan ke Nabil.
+Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, info saja di grub.
 
 ---
 
@@ -19,8 +17,8 @@ Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, ajukan ke Nabil.
 |---|---|
 | `SupabaseClient.kt` dan `ApiError.kt` sudah ada | Bisa login dengan akun demo |
 | `AuthUiState` menyimpan `userId` | Dua akun berbeda melihat bookmark berbeda |
-| Tabel `bookmarks` sudah ada, view `cafes_with_rating` bisa dibaca | Dikonfirmasi Nabil |
-| Nama slot `BookmarkAction(cafeId)` sudah disepakati dengan Ossa | Tertulis di grup |
+| Tabel `bookmarks` sudah ada, view `cafes_with_rating` bisa dibaca | sudah ada |
+| Nama slot `BookmarkAction(cafeId)` sudah disepakati dengan Ossa | Bisa tanya ossa |
 
 Bedanya dengan fitur lain: bookmark **tidak punya peran admin**. Yang menentukan isi daftar hanya `user_id = auth.uid()`. Admin tidak bisa melihat bookmark orang lain, dan itu memang disengaja.
 
@@ -362,5 +360,5 @@ Catatan tersimpan di database, bukan di memori. Uji dengan menutup aplikasi lalu
 | `DirectoryDetailScreen.kt` | milik Ossa; kamu hanya menyerahkan `BookmarkAction(cafeId)` |
 | `Cafe`, `CafeCard` | milik Ossa; jangan diubah dari fitur Bookmark |
 | `Review`, `ReviewCard`, `ReviewSection` | milik Shelfina; jangan dipanggil dari fitur ini |
-| Tabel `bookmarks` dan policy | jangan diubah; ajukan ke Nabil |
+| Tabel `bookmarks` dan policy | jangan diubah |
 | Tabel `reviews` | baca hanya lewat `cafes_with_rating`; jangan query langsung |

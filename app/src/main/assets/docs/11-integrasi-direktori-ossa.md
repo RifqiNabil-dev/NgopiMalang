@@ -6,12 +6,10 @@ Pembagian tugasnya:
 
 | Urusan | Dikerjakan oleh |
 |---|---|
-| Membuat tabel, view, policy, bucket, akun demo | **Nabil (ketua tim)** — lihat [09-skema-database.md](09-skema-database.md) |
-| Menambah dependency Gradle, `SupabaseClient`, `ApiError` | **Nabil** — sekali untuk semua fitur |
 | Kode fitur Direktori | **Ossa** (dokumen ini) |
 | Kode fitur lain | anggota masing-masing, pola sama |
 
-Kamu **tidak perlu** dan **tidak boleh** menjalankan SQL sendiri. Kalau ada kolom yang kurang, ajukan ke Nabil; jangan menambah tabel.
+Kamu **tidak perlu** dan **tidak boleh** menjalankan SQL sendiri. Kalau ada kolom yang kurang, info aja di grub.
 
 ---
 
@@ -25,9 +23,9 @@ Kalau salah satu belum ada, berhenti dan tunggu — kalau dipaksa, kamu akan men
 | `core/data/ApiError.kt` sudah ada | Sudah ada fungsi penerjemah kode error |
 | `AuthUiState.role` sudah terisi `"admin"`/`"user"` | Buka profil, label peran tampil benar |
 | Dependency Supabase, Ktor, serialization, Coil sudah masuk `build.gradle` | Project bisa `sync` tanpa error |
-| Tabel `cafes`, `vibes`, `cafe_vibes` dan bucket `cafe-photos` sudah ada | Nabil sudah mengonfirmasi di grup |
+| Tabel `cafes`, `vibes`, `cafe_vibes` dan bucket `cafe-photos` sudah ada | sudah ada |
 
-Jangan menambah dependency sendiri. Semua kebutuhan pustaka masuk sekali di `gradle/libs.versions.toml` oleh Nabil, supaya tidak ada dua versi berbeda di branch yang berbeda.
+Jangan menambah dependency sendiri. Semua kebutuhan pustaka masuk sekali di `gradle/libs.versions.toml` pada branch, supaya tidak ada dua versi berbeda di branch yang berbeda.
 
 ---
 
@@ -45,11 +43,11 @@ Jangan menambah dependency sendiri. Semua kebutuhan pustaka masuk sekali di `gra
 | `features/directory/DirectoryDetailScreen.kt` | **ubah** | Muat data sendiri, badge arsip, slot, menu admin |
 | `core/components/CafeCard.kt` | **ubah (koordinasi)** | Foto dari Storage, harga dari dua angka; dipakai beranda & bookmark |
 
-`DummyData.kt` **tidak** kamu hapus. Nabil yang menghapus setelah semua fitur pindah.
+`DummyData.kt` **tidak** perlu kamu hapus. nanti akan di hapus setelah semua fitur disatukan.
 
 ### 2.1 Skema tabel yang boleh kamu pakai
 
-Ini daftar objek yang sudah dibuat Nabil. Kamu **memakai**, bukan membuat. Nama kolom harus persis seperti di bawah — salah satu huruf saja membuat query gagal.
+Ini daftar objek yang sudah dibuat. Kamu **memakai**, bukan membuat. Nama kolom harus persis seperti di bawah — salah satu huruf saja membuat query gagal.
 
 **`cafes_with_rating`** — view, dipakai untuk semua pembacaan daftar dan detail.
 
@@ -212,7 +210,7 @@ Aturan mapper:
 
 ## 5. Langkah 3 — `CafeRepository`
 
-Satu file, satu tabel utama. Semua fungsi `suspend`, semua memakai `SupabaseClient` yang sudah disiapkan Nabil.
+Satu file, satu tabel utama. Semua fungsi `suspend`, semua memakai `SupabaseClient` yang sudah dibuat.
 
 ```kotlin
 class CafeRepository(private val client: SupabaseClient = Supabase.client) {
@@ -455,7 +453,6 @@ Supaya tidak menambah beban presentasi:
 - Dependency injection (Hilt/Koin); cukup nilai default di konstruktor ViewModel.
 - Realtime subscription; muat ulang setelah simpan sudah cukup.
 - Animasi transisi khusus.
-- Penulisan SQL atau perubahan tabel — itu milik Nabil.
 
 ---
 
@@ -466,5 +463,5 @@ Supaya tidak menambah beban presentasi:
 | `Cafe`, `CafeCard` | dipakai beranda, Vibe, Bookmark; perubahannya diumumkan dulu |
 | `DirectoryDetailScreen` | milikmu; slot `ReviewSection` (Shelfina) dan `BookmarkAction` (Shananda) dipasang sekali, jangan diubah isinya |
 | Repository ulasan / bookmark | jangan dipanggil dari fitur Direktori; itu milik fitur masing-masing |
-| Tabel dan policy | jangan diubah; ajukan ke Nabil |
-| `DummyData.kt` | jangan dihapus; Nabil menghapusnya setelah semua fitur pindah |
+| Tabel dan policy | jangan diubah |
+| `DummyData.kt` | jangan dihapus nanti akan dihapus setelah semua fitur disatukan |

@@ -4,12 +4,10 @@ Dokumen ini berisi **apa yang harus dibuat dan diubah** di kode fitur Ulasan & R
 
 | Urusan | Dikerjakan oleh |
 |---|---|
-| Membuat tabel, view, policy, bucket, akun demo | **Nabil** — lihat [09-skema-database.md](09-skema-database.md) |
-| Dependency Gradle, `SupabaseClient`, `ApiError` | **Nabil** — sekali untuk semua fitur |
 | Kode fitur Ulasan & Rating | **Shelfina** (dokumen ini) |
 | Slot di layar detail cafe | **Ossa** memasang, **Shelfina** mengisi |
 
-Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, ajukan ke Nabil.
+Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, info saja di grub.
 
 ---
 
@@ -19,8 +17,8 @@ Kamu tidak perlu menjalankan SQL. Kalau ada kolom yang kurang, ajukan ke Nabil.
 |---|---|
 | `SupabaseClient.kt` dan `ApiError.kt` sudah ada | Bisa login dengan akun demo |
 | `AuthUiState` menyimpan `userId` dan `role` | Label peran di profil tampil benar |
-| Tabel `reviews` dan `profiles` sudah ada, view `cafes_with_rating` bisa dibaca | Dikonfirmasi Nabil |
-| Nama slot `ReviewSection(cafeId)` sudah disepakati dengan Ossa | Tertulis di grup, bukan di kepala |
+| Tabel `reviews` dan `profiles` sudah ada, view `cafes_with_rating` bisa dibaca | sudah ada |
+| Nama slot `ReviewSection(cafeId)` sudah disepakati dengan Ossa | Bisa tanya ossa |
 
 Slot butuh kesepakatan karena file `DirectoryDetailScreen.kt` milik Ossa. Kalau kamu menulis langsung ke file itu, konflik merge dijamin terjadi.
 
@@ -399,6 +397,6 @@ Setelah setiap operasi tulis, `rating` dan `review_count` dari view ikut berubah
 | `DirectoryDetailScreen.kt` | milik Ossa; kamu hanya menyerahkan `ReviewSection(cafeId)` |
 | `Cafe`, `CafeCard` | milik Ossa; jangan diubah dari fitur Ulasan |
 | `ReviewCard` | dipakai bersama (layar Ulasan dan beranda); perubahan bentuknya diumumkan |
-| Tabel `reviews` dan policy | jangan diubah; ajukan ke Nabil |
+| Tabel `reviews` dan policy | jangan diubah |
 | Bookmark | milik Shananda; jangan membaca `bookmarks` dari fitur ini |
 | Tabel `cafes` | baca saja; jangan menulis dari fitur Ulasan |
