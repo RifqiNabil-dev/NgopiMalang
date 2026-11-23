@@ -25,26 +25,23 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ngopimalang.app.core.components.AppCard
 import com.ngopimalang.app.core.model.Cafe
-import com.ngopimalang.app.features.reviews.CafeReviewsSection
-import com.ngopimalang.app.features.reviews.ReviewsViewModel
+import com.ngopimalang.app.features.reviews.ReviewSection
+import com.ngopimalang.app.features.reviews.ReviewSectionViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DirectoryDetailScreen(
     cafe: Cafe?,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    reviewsViewModel: ReviewsViewModel = viewModel()
+    modifier: Modifier = Modifier
 ) {
-    val reviewUiState by reviewsViewModel.uiState.collectAsState()
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(bottom = 24.dp)
     ) {
-        // Top Back Button Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,19 +76,11 @@ fun DirectoryDetailScreen(
             return
         }
 
-        LaunchedEffect(cafe.name, cafe.rating) {
-            reviewsViewModel.ensureReviewsForCafe(cafe.name, cafe.rating)
-        }
+        val reviewSectionViewModel: ReviewSectionViewModel = viewModel(key = "review_section_${cafe.id}")
+        val reviewSectionState by reviewSectionViewModel.uiState.collectAsState()
+        val displayRating = reviewSectionState.rating ?: cafe.rating
+        val formattedRating = String.format(Locale.US, "%.1f", displayRating)
 
-        // Otomatis ter-update setiap kali ada penambahan/penghapusan ulasan
-        val liveAverageRating = reviewsViewModel.calculateCafeRating(
-            reviews = reviewUiState.allReviews,
-            cafeName = cafe.name,
-            fallbackRating = cafe.rating
-        )
-        val formattedRating = reviewsViewModel.formatRating(liveAverageRating)
-
-        // Header Photo Box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -135,7 +124,6 @@ fun DirectoryDetailScreen(
                 )
             }
 
-            // Rating Badge in Bottom End of Image (selalu sinkron dengan ulasan)
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
@@ -167,7 +155,6 @@ fun DirectoryDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Cafe Info Card
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -197,7 +184,6 @@ fun DirectoryDetailScreen(
                 }
             }
 
-            // Vibe Chips Row
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -237,11 +223,11 @@ fun DirectoryDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Bagian Ulasan & Rating per Cafe
-        CafeReviewsSection(
+        ReviewSection(
+            cafeId = cafe.id,
             cafeName = cafe.name,
             defaultRating = cafe.rating,
-            viewModel = reviewsViewModel
+            sectionViewModel = reviewSectionViewModel
         )
     }
 }

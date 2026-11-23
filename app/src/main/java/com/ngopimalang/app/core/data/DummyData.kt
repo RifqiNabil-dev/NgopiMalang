@@ -6,6 +6,7 @@ import com.ngopimalang.app.core.model.EventCategory
 import com.ngopimalang.app.core.model.EventPromo
 import com.ngopimalang.app.core.model.Review
 import com.ngopimalang.app.core.model.Vibe
+import kotlinx.datetime.Instant
 
 /**
  * Data dummy Progress 1 (UI belum terintegrasi Supabase).
@@ -228,75 +229,91 @@ object DummyData {
     val reviews = listOf(
         Review(
             id = "r1",
+            userId = "u1",
+            cafeId = "c5",
             userName = "Dinda Ayu",
             cafeName = "Bara Coffee House",
             rating = 5,
             comment = "Tempatnya tenang, colokan banyak, dan kopinya konsisten enak. Cocok banget buat ngerjain tugas.",
             favoriteMenu = "Es Kopi Susu Gula Aren",
-            dateLabel = "2 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 2L * 86_400_000L)
         ),
         Review(
             id = "r2",
+            userId = "u2",
+            cafeId = "c2",
             userName = "Bagas Pratama",
             cafeName = "Kedai Tepi Sawah",
             rating = 4,
             comment = "View sawahnya bikin betah. Agak ramai saat sore, tapi pelayanan cepat.",
             favoriteMenu = "Kopi Tubruk",
-            dateLabel = "5 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 5L * 86_400_000L)
         ),
         Review(
             id = "r3",
+            userId = "u3",
+            cafeId = "c3",
             userName = "Sari Wulandari",
             cafeName = "Ruang Seduh",
             rating = 5,
             comment = "Baristanya ramah dan mau menjelaskan karakter tiap biji kopi. Wajib coba manual brew-nya.",
             favoriteMenu = "V60 Gayo",
-            dateLabel = "1 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 7L * 86_400_000L)
         ),
         Review(
             id = "r4",
+            userId = "u4",
+            cafeId = "c11",
             userName = "Fajar Hidayat",
             cafeName = "Kopi Studio 24 Suhat",
             rating = 5,
             comment = "Tempat andalan buat ngerjain skripsi malam-malam. WiFi kenceng banget dan colokan aman.",
             favoriteMenu = "Es Kopi Aren 24",
-            dateLabel = "3 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 3L * 86_400_000L)
         ),
         Review(
             id = "r5",
+            userId = "u5",
+            cafeId = "c10",
             userName = "Nabila Putri",
             cafeName = "Senja Coffee & View",
             rating = 5,
             comment = "Gak pernah bosan ke sini! Pemandangan sore pas sunset keren banget, adem dan romantis.",
             favoriteMenu = "Matcha Cream Latte",
-            dateLabel = "4 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 4L * 86_400_000L)
         ),
         Review(
             id = "r6",
+            userId = "u6",
+            cafeId = "c7",
             userName = "Rizky Ramadhan",
             cafeName = "Latar Ijen Roastery",
             rating = 5,
             comment = "Coffee shop paling estetis di Malang saat ini. Espresso blend-nya acid-nya pas dan wangi.",
             favoriteMenu = "Piccolo Latte",
-            dateLabel = "1 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 7L * 86_400_000L)
         ),
         Review(
             id = "r7",
+            userId = "u7",
+            cafeId = "c9",
             userName = "Maya Indah",
             cafeName = "Oemah Heretan Vintage",
             rating = 4,
             comment = "Suasananya sangat homey kayak rumah nenek. Pisang goreng kayumanisnya enak parah!",
             favoriteMenu = "Kopi Tubruk Rempah",
-            dateLabel = "2 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 14L * 86_400_000L)
         ),
         Review(
             id = "r8",
+            userId = "u8",
+            cafeId = "c8",
             userName = "Andi Wijaya",
             cafeName = "Lapan Puluh Coffee",
             rating = 4,
             comment = "Lokasi strategis dekat kampus UB & UMM. Tempat luas dan harga mahasiswa.",
             favoriteMenu = "Es Kopi Susu Kampus",
-            dateLabel = "2 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 14L * 86_400_000L)
         )
     )
 }
