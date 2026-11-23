@@ -1,8 +1,26 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
 }
+
+/**
+ * Alamat dan kunci Supabase disimpan di local.properties (tidak ikut git).
+ * Ambil dari Supabase Dashboard -> Project Settings -> API.
+ * Kalau kosong, aplikasi tetap bisa dibangun; login akan menampilkan pesan
+ * "Supabase belum dikonfigurasi".
+ */
+val supabaseProperties: Properties = providers
+    .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
+    .asText
+    .map { text -> Properties().apply { text.byteInputStream().use { load(it) } } }
+    .get()
+
+fun supabaseValue(key: String): String =
+    supabaseProperties.getProperty(key)?.trim().orEmpty()
 
 android {
     namespace = "com.ngopimalang.app"
@@ -16,6 +34,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", "\"${supabaseValue("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseValue("SUPABASE_ANON_KEY")}\"")
     }
 
     buildTypes {
@@ -27,20 +48,16 @@ android {
             )
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     buildFeatures {
         compose = true
+        buildConfig = true
     }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    kotlinOptions {
+        jvmTarget = "11"
     }
 }
 
@@ -58,12 +75,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
 
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.multiplatform.settings)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
-
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

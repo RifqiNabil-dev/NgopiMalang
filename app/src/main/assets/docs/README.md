@@ -135,6 +135,12 @@ Sisanya (isi layar, ViewModel, filter, state) kamu yang tulis.
 | [06-bookmark.md](06-bookmark.md) | Bahan & tugas fitur Saved Spot — **Shananda** |
 | [07-vibe.md](07-vibe.md) | Bahan & tugas fitur Kategori Vibe — **Evia** |
 | [08-komponen-bersama.md](08-komponen-bersama.md) | Aturan warna & ukuran, katalog komponen siap pakai, pola ViewModel |
+| [09-skema-database.md](09-skema-database.md) | Rancangan tabel Supabase untuk Progress 2: kolom, relasi, hak akses, pemetaan ke model |
+| [10-panduan-integrasi.md](10-panduan-integrasi.md) | Cara integrasi Supabase di kode: jalur data, standar UiState, elemen UI wajib per anggota, urutan kerja |
+| [11-integrasi-direktori-ossa.md](11-integrasi-direktori-ossa.md) | Tugas kode Integrasi Supabase — Fitur 1 Direktori Cafe (**Ossa**) |
+| [12-integrasi-ulasan-shelfina.md](12-integrasi-ulasan-shelfina.md) | Tugas kode Integrasi Supabase — Fitur 2 Ulasan & Rating (**Shelfina**) |
+| [13-integrasi-bookmark-shananda.md](13-integrasi-bookmark-shananda.md) | Tugas kode Integrasi Supabase — Fitur 3 Bookmark/Saved Spot (**Shananda**) |
+| [14-integrasi-vibe-evia.md](14-integrasi-vibe-evia.md) | Tugas kode Integrasi Supabase — Fitur 4 Kategori Vibe (**Evia**) |
 
 ---
 
