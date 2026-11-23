@@ -1,4 +1,4 @@
-package com.ngopimalang.app.core.navigation
+﻿package com.ngopimalang.app.core.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -152,10 +152,13 @@ fun AppNavHost(
         // ==================== KATEGORI VIBE (Evia) ====================
         composable(NavRoutes.VIBE) { entry ->
             val vibeViewModel: VibeViewModel = viewModel(entry)
+            val isAdmin = authState.role == "admin"
             VibeScreen(
-                onCafeClick = { cafe -> navController.navigate("directory/cafe/${cafe.id}") },
+                onCafeClick = { cafeId -> navController.navigate("directory/cafe/$cafeId") },
                 onVibeDetail = { id -> navController.navigate(NavRoutes.vibeDetail(id)) },
                 onAddVibe = { navController.navigate(NavRoutes.vibeForm()) },
+                onEditVibe = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
+                isAdmin = isAdmin,
                 vibeViewModel = vibeViewModel
             )
         }
@@ -163,14 +166,13 @@ fun AppNavHost(
             route = NavRoutes.VIBE_DETAIL,
             arguments = listOf(navArgument("vibeId") { type = NavType.StringType })
         ) { entry ->
-            val parentEntry = remember(entry) { navController.getBackStackEntry(NavRoutes.VIBE) }
-            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            val isAdmin = authState.role == "admin"
             VibeDetailScreen(
                 vibeId = entry.arguments?.getString("vibeId").orEmpty(),
                 onBack = { navController.popBackStack() },
                 onEdit = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
-                onCafeClick = { cafe -> navController.navigate("directory/cafe/${cafe.id}") },
-                vibeViewModel = vibeViewModel
+                onCafeClick = { cafeId -> navController.navigate("directory/cafe/$cafeId") },
+                isAdmin = isAdmin
             )
         }
         composable(
@@ -181,12 +183,9 @@ fun AppNavHost(
                 defaultValue = null
             })
         ) { entry ->
-            val parentEntry = remember(entry) { navController.getBackStackEntry(NavRoutes.VIBE) }
-            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
             VibeFormScreen(
                 vibeId = entry.arguments?.getString("vibeId"),
-                onBack = { navController.popBackStack() },
-                vibeViewModel = vibeViewModel
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -233,3 +232,5 @@ fun AppNavHost(
         }
     }
 }
+
+
