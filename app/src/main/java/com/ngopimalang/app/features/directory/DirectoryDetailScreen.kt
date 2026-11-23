@@ -12,7 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,16 +22,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ngopimalang.app.core.components.AppCard
 import com.ngopimalang.app.core.model.Cafe
+import com.ngopimalang.app.features.reviews.CafeReviewsSection
+import com.ngopimalang.app.features.reviews.ReviewsViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DirectoryDetailScreen(
     cafe: Cafe?,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    reviewsViewModel: ReviewsViewModel = viewModel()
 ) {
+    val reviewUiState by reviewsViewModel.uiState.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -72,6 +78,18 @@ fun DirectoryDetailScreen(
             }
             return
         }
+
+        LaunchedEffect(cafe.name, cafe.rating) {
+            reviewsViewModel.ensureReviewsForCafe(cafe.name, cafe.rating)
+        }
+
+        // Otomatis ter-update setiap kali ada penambahan/penghapusan ulasan
+        val liveAverageRating = reviewsViewModel.calculateCafeRating(
+            reviews = reviewUiState.allReviews,
+            cafeName = cafe.name,
+            fallbackRating = cafe.rating
+        )
+        val formattedRating = reviewsViewModel.formatRating(liveAverageRating)
 
         // Header Photo Box
         Box(
@@ -117,7 +135,7 @@ fun DirectoryDetailScreen(
                 )
             }
 
-            // Rating Badge in Bottom End of Image
+            // Rating Badge in Bottom End of Image (selalu sinkron dengan ulasan)
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
@@ -138,7 +156,7 @@ fun DirectoryDetailScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "${cafe.rating} / 5.0",
+                        text = "$formattedRating / 5.0",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -216,6 +234,15 @@ fun DirectoryDetailScreen(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Bagian Ulasan & Rating per Cafe
+        CafeReviewsSection(
+            cafeName = cafe.name,
+            defaultRating = cafe.rating,
+            viewModel = reviewsViewModel
+        )
     }
 }
 
