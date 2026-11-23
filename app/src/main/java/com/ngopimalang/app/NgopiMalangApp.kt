@@ -33,9 +33,12 @@ fun NgopiMalangApp() {
                     currentRoute = currentRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
-                            popUpTo(NavRoutes.HOME) { saveState = true }
+                            // Pop semua layar di stack sampai HOME
+                            popUpTo(NavRoutes.HOME) {
+                                inclusive = false
+                            }
+                            // Hindari multiple copies dari destination yang sama
                             launchSingleTop = true
-                            restoreState = true
                         }
                     }
                 )

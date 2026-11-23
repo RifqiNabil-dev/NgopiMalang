@@ -25,3 +25,4 @@ local.properties
 # Konfigurasi asisten (bukan bagian aplikasi)
 .hermesignore
 .hermesrules
+.kotlin/

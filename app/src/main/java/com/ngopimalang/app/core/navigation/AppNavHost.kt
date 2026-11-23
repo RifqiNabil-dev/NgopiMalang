@@ -4,27 +4,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.ngopimalang.app.core.ui.FeaturePlaceholderScreen
+import androidx.navigation.navArgument
+import com.ngopimalang.app.features.directory.DirectoryViewModel
+import com.ngopimalang.app.features.directory.DirectoryScreen
+import com.ngopimalang.app.features.directory.DirectoryDetailScreen
 import com.ngopimalang.app.features.auth.AuthViewModel
 import com.ngopimalang.app.features.auth.LoginScreen
 import com.ngopimalang.app.features.auth.RegisterScreen
+import com.ngopimalang.app.features.eventpromo.EventDetailScreen
+import com.ngopimalang.app.features.eventpromo.EventFormScreen
+import com.ngopimalang.app.features.eventpromo.EventPromoScreen
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.profile.ProfileScreen
+import com.ngopimalang.app.features.vibe.VibeDetailScreen
+import com.ngopimalang.app.features.vibe.VibeFormScreen
+import com.ngopimalang.app.features.vibe.VibeScreen
+import com.ngopimalang.app.features.vibe.VibeViewModel
+import com.ngopimalang.app.features.bookmark.BookmarkScreen
+import com.ngopimalang.app.features.reviews.ReviewsScreen
 
 /**
  * Peta seluruh halaman aplikasi.
  *
- * Cara menambah screen fitur (contoh untuk Event & Promo milik Rifqi):
- * 1. Buat screen di package features.eventpromo.
- * 2. Ganti pemanggilan [FeaturePlaceholderScreen] pada route [NavRoutes.EVENT_PROMO]
- *    dengan screen milikmu.
+ * Semua fitur anggota sudah terhubung dengan routing yang lengkap.
  */
 @Composable
 fun AppNavHost(
@@ -51,6 +63,7 @@ fun AppNavHost(
         startDestination = NavRoutes.LOGIN,
         modifier = modifier
     ) {
+        // ==================== AUTH ====================
         composable(NavRoutes.LOGIN) {
             LoginScreen(
                 state = authState,
@@ -72,6 +85,7 @@ fun AppNavHost(
             )
         }
 
+        // ==================== HOME & PROFILE ====================
         composable(NavRoutes.HOME) {
             HomeScreen(
                 userName = authState.name.ifBlank { "Ngopi Lover" },
@@ -93,49 +107,127 @@ fun AppNavHost(
             )
         }
 
-        // ---- Placeholder modul anggota, ganti dengan screen asli masing-masing ----
+        // ==================== DIREKTORI CAFE (Ossa) ====================
         composable(NavRoutes.DIRECTORY) {
-            FeaturePlaceholderScreen(
-                title = "Direktori Cafe",
-                owner = "Ossa Amelia Zuhra Lubis",
-                listComponent = "LazyVerticalGrid 2 kolom",
-                flows = listOf("List/Grid", "Detail Cafe", "Form Tambah/Edit")
+            val directoryViewModel: DirectoryViewModel = viewModel()
+            val state by directoryViewModel.uiState.collectAsStateWithLifecycle()
+            
+            DirectoryScreen(
+                state = state,
+                onSearchChange = directoryViewModel::onSearchChange,
+                onToggleWifi = directoryViewModel::toggleWifi,
+                onTogglePlugs = directoryViewModel::togglePlugs,
+                onResetFilters = directoryViewModel::resetFilters,
+                onCafeClick = { cafeId ->
+                    navController.navigate("directory/cafe/$cafeId")
+                }
             )
         }
 
+        composable(
+            route = NavRoutes.DIRECTORY_DETAIL,
+            arguments = listOf(navArgument("cafeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val cafeId = backStackEntry.arguments?.getString("cafeId")
+            val directoryViewModel: DirectoryViewModel = viewModel()
+            val cafe = directoryViewModel.findCafe(cafeId)
+            
+            DirectoryDetailScreen(
+                cafe = cafe,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ==================== ULASAN & RATING (Shelfina) ====================
         composable(NavRoutes.REVIEWS) {
-            FeaturePlaceholderScreen(
-                title = "Ulasan & Rating",
-                owner = "Shelfina Khayla Anindita",
-                listComponent = "HorizontalPager + LazyColumn",
-                flows = listOf("Daftar Ulasan", "Detail Ulasan", "Form Ulasan")
-            )
+            ReviewsScreen()
         }
 
+        // ==================== SAVED SPOT / BOOKMARK (Shananda) ====================
         composable(NavRoutes.BOOKMARK) {
-            FeaturePlaceholderScreen(
-                title = "Saved Spot / Bookmark",
-                owner = "Shananda Putri Aisyah",
-                listComponent = "LazyColumn",
-                flows = listOf("Daftar Saved Spot", "Detail", "Form Catatan")
+            BookmarkScreen()
+        }
+
+        // ==================== KATEGORI VIBE (Evia) ====================
+        composable(NavRoutes.VIBE) { entry ->
+            val vibeViewModel: VibeViewModel = viewModel(entry)
+            VibeScreen(
+                onCafeClick = { cafe -> navController.navigate("directory/cafe/${cafe.id}") },
+                onVibeDetail = { id -> navController.navigate(NavRoutes.vibeDetail(id)) },
+                onAddVibe = { navController.navigate(NavRoutes.vibeForm()) },
+                vibeViewModel = vibeViewModel
+            )
+        }
+        composable(
+            route = NavRoutes.VIBE_DETAIL,
+            arguments = listOf(navArgument("vibeId") { type = NavType.StringType })
+        ) { entry ->
+            val parentEntry = remember(entry) { navController.getBackStackEntry(NavRoutes.VIBE) }
+            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            VibeDetailScreen(
+                vibeId = entry.arguments?.getString("vibeId").orEmpty(),
+                onBack = { navController.popBackStack() },
+                onEdit = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
+                onCafeClick = { cafe -> navController.navigate("directory/cafe/${cafe.id}") },
+                vibeViewModel = vibeViewModel
+            )
+        }
+        composable(
+            route = NavRoutes.VIBE_FORM,
+            arguments = listOf(navArgument("vibeId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { entry ->
+            val parentEntry = remember(entry) { navController.getBackStackEntry(NavRoutes.VIBE) }
+            val vibeViewModel: VibeViewModel = viewModel(parentEntry)
+            VibeFormScreen(
+                vibeId = entry.arguments?.getString("vibeId"),
+                onBack = { navController.popBackStack() },
+                vibeViewModel = vibeViewModel
             )
         }
 
-        composable(NavRoutes.VIBE) {
-            FeaturePlaceholderScreen(
-                title = "Kategori Vibe Cafe",
-                owner = "Evia Vinata",
-                listComponent = "HorizontalPager + TabRow",
-                flows = listOf("Daftar Vibe", "Detail Vibe", "Form Vibe")
-            )
-        }
+        // ==================== EVENT & PROMO (Rifqi/Nabil) ====================
 
         composable(NavRoutes.EVENT_PROMO) {
-            FeaturePlaceholderScreen(
-                title = "Event & Promo Cafe",
-                owner = "Rifqi Nabil Al Fath",
-                listComponent = "LazyColumn",
-                flows = listOf("List Event & Promo", "Detail", "Form Tambah/Edit")
+            EventPromoScreen(
+                onEventClick = { eventId ->
+                    navController.navigate(NavRoutes.eventDetailRoute(eventId))
+                },
+                onAddEvent = {
+                    navController.navigate(NavRoutes.eventFormRoute())
+                }
+            )
+        }
+
+        composable(
+            route = NavRoutes.EVENT_DETAIL,
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventDetailScreen(
+                eventId = eventId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { id ->
+                    navController.navigate(NavRoutes.eventFormRoute(id))
+                }
+            )
+        }
+
+        composable(
+            route = NavRoutes.EVENT_FORM,
+            arguments = listOf(navArgument("eventId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId")
+            EventFormScreen(
+                eventId = eventId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
