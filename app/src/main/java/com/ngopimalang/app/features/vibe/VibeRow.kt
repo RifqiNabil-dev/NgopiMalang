@@ -1,8 +1,15 @@
-﻿package com.ngopimalang.app.features.vibe
+package com.ngopimalang.app.features.vibe
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Bentuk baris `vibes` / `vibes_with_count`.
+ *
+ * Saat membaca tabel `vibes` biasa (insert/update), `cafe_count` tidak ada sehingga
+ * tetap 0; angka yang ditampilkan layar selalu berasal dari view.
+ * Kolom milik database (id, created_by, created_at, updated_at) tidak pernah dikirim.
+ */
 @Serializable
 data class VibeRow(
     val id: String = "",

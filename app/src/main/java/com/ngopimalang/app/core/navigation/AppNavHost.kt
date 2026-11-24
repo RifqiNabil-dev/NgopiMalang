@@ -1,4 +1,4 @@
-﻿package com.ngopimalang.app.core.navigation
+package com.ngopimalang.app.core.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -207,9 +207,13 @@ fun AppNavHost(
         // ==================== KATEGORI VIBE (Evia) ====================
         composable(NavRoutes.VIBE) { entry ->
             val vibeViewModel: VibeViewModel = viewModel(entry)
-            val isAdmin = authState.role == "admin"
+            val isAdmin = authState.isAdmin
+            LaunchedEffect(isAdmin) {
+                vibeViewModel.setAdmin(isAdmin)
+                vibeViewModel.ensureLoaded()
+            }
             VibeScreen(
-                onCafeClick = { cafeId -> navController.navigate("directory/cafe/$cafeId") },
+                onCafeClick = { cafeId -> navController.navigate(CafeDetailRoute(cafeId)) },
                 onVibeDetail = { id -> navController.navigate(NavRoutes.vibeDetail(id)) },
                 onAddVibe = { navController.navigate(NavRoutes.vibeForm()) },
                 onEditVibe = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
@@ -221,12 +225,12 @@ fun AppNavHost(
             route = NavRoutes.VIBE_DETAIL,
             arguments = listOf(navArgument("vibeId") { type = NavType.StringType })
         ) { entry ->
-            val isAdmin = authState.role == "admin"
+            val isAdmin = authState.isAdmin
             VibeDetailScreen(
                 vibeId = entry.arguments?.getString("vibeId").orEmpty(),
                 onBack = { navController.popBackStack() },
                 onEdit = { id -> navController.navigate(NavRoutes.vibeForm(id)) },
-                onCafeClick = { cafeId -> navController.navigate("directory/cafe/$cafeId") },
+                onCafeClick = { cafeId -> navController.navigate(CafeDetailRoute(cafeId)) },
                 isAdmin = isAdmin
             )
         }

@@ -1,4 +1,4 @@
-﻿package com.ngopimalang.app.features.vibe
+package com.ngopimalang.app.features.vibe
 
 import com.ngopimalang.app.core.model.Vibe
 

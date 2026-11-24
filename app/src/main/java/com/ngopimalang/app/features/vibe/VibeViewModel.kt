@@ -31,6 +31,11 @@ class VibeViewModel(private val repo: VibeRepository = VibeRepository()) : ViewM
         _uiState.update { it.copy(isAdmin = isAdmin) }
     }
 
+    /** Dipanggil sekali saat layar dibuka; ulangi hanya setelah tambah/edit/hapus. */
+    fun ensureLoaded() {
+        if (_uiState.value.vibes.isEmpty() && !_uiState.value.isLoading) load()
+    }
+
     /** Memuat daftar vibe (dengan cafe_count dari view). Cafe per tab dimuat ulang saat tab aktif. */
     fun load() {
         viewModelScope.launch {
