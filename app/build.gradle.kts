@@ -76,6 +76,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.supabase.auth)
+    implementation(libs.supabase.storage)
+    implementation(libs.coil.compose)
     implementation(libs.supabase.postgrest)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.kotlinx.serialization.json)

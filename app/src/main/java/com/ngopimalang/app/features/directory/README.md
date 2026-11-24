@@ -1,37 +1,7 @@
-# features/directory — Direktori Cafe
+# Direktori Cafe — Ossa Amelia Zuhra Lubis
 
-**Pemilik:** Ossa Amelia Zuhra Lubis (245150600111022)
+Implementasi Progress 2 memakai Supabase Cloud, MVVM/StateFlow, form tambah/edit admin, foto Storage, arsip dan hapus. Daftar dibaca dari cafes_with_rating dan detail memuat UUID secara mandiri. Lihat PROGRESS2.md di folder ini untuk kontrak integrasi, batas fitur anggota lain, pemetaan materi praktikum, pengujian dan langkah demo.
 
-Implementasi Progress 1: `DirectoryScreen` (LazyVerticalGrid 2 kolom) → `DirectoryDetailScreen`, dengan `DirectoryViewModel` (StateFlow).
+Cafe masih memiliki properti kompatibilitas bagi modul Progress 1. Slot ReviewSection/BookmarkAction belum dihubungkan karena komponen anggota terkait belum tersedia di fondasi.
 
-- Pencarian nama/alamat, tanpa membedakan kapital dan spasi luar.
-- Filter Wi-Fi dan colokan bisa digabung dengan pencarian.
-- Jumlah hasil, pesan hasil kosong, tombol reset, dan penanganan ID detail tidak valid.
-- Menggunakan CafeCard dan tema bersama; data contoh hanya diakses ViewModel.
-- Route detail: `directory/cafe/{cafeId}`. Navigasi disambungkan di AppNavHost.
-
-## Pengujian manual
-
-1. Login contoh, buka Direktori: enam cafe dalam dua kolom.
-2. Cari `SAE`, lalu ` semarang `: hasil Kopi Sae dan Ruang Seduh.
-3. Aktifkan Wi-Fi: Ruang Seduh dan Teras Kopi Dago tidak tampil.
-4. Gabungkan pencarian dan filter; kata kunci tidak cocok menampilkan pesan dan reset.
-5. Buka detail lalu kembali: pencarian dan filter tetap aktif.
-6. Periksa mode gelap dan ukuran huruf besar.
-
-## Pekerjaan versi akhir
-
-CafeFormScreen, CRUD Supabase dan unggah/hapus foto belum dibuat. Data belum persisten.
-Foto masih placeholder bawaan CafeCard; model bersama belum punya URL foto atau kualitas Wi-Fi.
-Integrasi perlu skema cafes, hak akses pengguna, Storage bucket, konfigurasi Supabase,
-dan kesepakatan perubahan model bersama dengan tim. Jangan menyimpan service-role key di aplikasi.
-
-Branch lokal: `codex/direktori-cafe-ossa`, belum di-push.
-
-- Model bersama: `com.ngopimalang.app.core.model.Cafe`
-- Dummy data sementara: `com.ngopimalang.app.core.data.DummyData.cafes`
-- Route: `NavRoutes.DIRECTORY` (ganti placeholder di `AppNavHost`)
-
----
-
-📖 **Panduan lengkap:** [`docs/04-directory.md`](../../../../../../assets/docs/04-directory.md)
+Pemeriksaan 24 November 2026: build debug, lima tes unit, dan dua skenario instrumentasi emulator lokal (admin dan user biasa) lulus. Pembatasan akses user juga terverifikasi melalui API Cloud; data fixture dibersihkan. Rekomendasi Home memakai UUID Cloud dan detail bersama mengikuti tata letak tim. Lihat PROGRESS2.md untuk cakupan serta batas pengujian. Belum di-push.

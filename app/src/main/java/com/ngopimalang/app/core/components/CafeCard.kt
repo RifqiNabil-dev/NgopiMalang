@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ngopimalang.app.core.model.Cafe
+import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 
 /**
  * Kartu cafe untuk grid direktori maupun list horizontal di Beranda.
@@ -66,7 +68,11 @@ fun CafeCard(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (cafe.imageResId != null) {
+            if (cafe.photoUrl != null) {
+                SubcomposeAsyncImage(model = cafe.photoUrl, contentDescription = cafe.name,
+                    error = { Text("Foto belum tersedia", modifier = Modifier.padding(8.dp)) },
+                    contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            } else if (cafe.imageResId != null) {
                 Image(
                     painter = painterResource(id = cafe.imageResId),
                     contentDescription = cafe.name,
@@ -132,6 +138,8 @@ fun CafeCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            if (!cafe.isActive) Text("Tidak aktif / arsip", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error)
             Text(
                 text = cafe.name,
                 style = MaterialTheme.typography.titleSmall,
@@ -155,7 +163,7 @@ fun CafeCard(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = " ${cafe.rating}",
+                    text = cafe.rating?.let { " $it" } ?: " Belum ada ulasan",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface

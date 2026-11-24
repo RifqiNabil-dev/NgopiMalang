@@ -21,6 +21,8 @@ fun DirectoryScreen(
     onTogglePlugs: () -> Unit,
     onResetFilters: () -> Unit,
     onCafeClick: (String) -> Unit,
+    onRetry: () -> Unit = {},
+    onAdd: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -51,8 +53,14 @@ fun DirectoryScreen(
                 FilterChip(selected = state.plugsOnly, onClick = onTogglePlugs, label = { Text("Ada colokan") })
             }
             Text("${state.cafes.size} cafe ditemukan", style = MaterialTheme.typography.labelLarge)
+            if (state.isAdmin) Button(onClick = onAdd) { Text("Tambah cafe") }
+            if (state.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            state.errorMessage?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = onRetry) { Text("Coba lagi") }
+            }
         }
-        if (state.cafes.isEmpty()) {
+        if (state.cafes.isEmpty() && !state.isLoading && state.errorMessage == null) {
             Column(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
