@@ -8,8 +8,10 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.ngopimalang.app.features.directory.CafeRepository
+import com.ngopimalang.app.features.reviews.ReviewRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +27,16 @@ class DirectoryCloudUiTest {
         compose.waitUntil(60_000) {
             compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
         }
+    }
+
+    private fun waitForSavedReview(id: String, comment: String) {
+        // The dialog and saved card contain the same text during the async save.
+        // The card's identity distinguishes a completed reload from the editor.
+        val card = hasTestTag("cafe_review_$id") and hasText(comment)
+        compose.waitUntil(60_000) {
+            compose.onAllNodes(card).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNode(card).performScrollTo().assertIsDisplayed()
     }
 
     private fun screenshot(name: String) {
@@ -169,5 +181,76 @@ class DirectoryCloudUiTest {
         waitForText("12 cafe ditemukan")
         compose.onAllNodesWithText("Tambah cafe").assertCountEquals(0)
         screenshot("qa-user-directory")
+    }
+
+    @Test fun ordinaryUserReviewPersistsAndAppearsOnHomeAndDetail() {
+        val args = InstrumentationRegistry.getArguments()
+        val email = args.getString("qaUserEmail").orEmpty()
+        val password = args.getString("qaUserPassword").orEmpty()
+        assumeTrue("Supply ordinary test user credentials", email.isNotBlank() && password.isNotBlank())
+        signInThroughUi(email, password)
+        val repo = ReviewRepository()
+        val cafe = runBlocking { CafeRepository().list("Bara Coffee House", false, false, false).single() }
+        // This opt-in test never overwrites an existing review, even for the QA account.
+        assertNull(runBlocking { repo.loadMyReview(cafe.id) })
+        val baseline = runBlocking { repo.cafeRating(cafe.id) }.reviewCount
+        val comment = "QA ulasan Ossa ${UUID.randomUUID().toString().take(8)}"
+        try {
+            compose.onNodeWithTag("home_feed").performScrollToNode(hasTestTag("home_cafes"))
+            val recommended = hasText(cafe.name) and hasAnyAncestor(hasTestTag("home_cafes"))
+            compose.waitUntil(60_000) { compose.onAllNodes(recommended).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNode(recommended).performClick()
+            waitForText("Tulis Ulasan")
+            compose.onNodeWithText("Tulis Ulasan").performScrollTo().performClick()
+            waitForText("Beri ulasan")
+            compose.onNodeWithText("Simpan").assertIsNotEnabled()
+            compose.onNodeWithContentDescription("5 Bintang").performClick()
+            compose.onNode(hasText("Menu Favorit (opsional)") and hasSetTextAction()).performTextReplacement("Kopi susu QA")
+            compose.onNode(hasText("Komentar (opsional)") and hasSetTextAction()).performTextReplacement(comment)
+            compose.onNodeWithText("Simpan").performSemanticsAction(SemanticsActions.OnClick) { it() }
+            compose.waitUntil(60_000) {
+                compose.onAllNodesWithContentDescription("Hapus ulasan saya").fetchSemanticsNodes().isNotEmpty()
+            }
+            val savedReview = requireNotNull(runBlocking { repo.loadMyReview(cafe.id) })
+            assertEquals(comment, savedReview.comment)
+            waitForSavedReview(savedReview.id, comment)
+            assertEquals(baseline + 1, runBlocking { repo.cafeRating(cafe.id) }.reviewCount)
+            screenshot("qa-review-created")
+
+            compose.onNodeWithText("Kembali").performScrollTo().performClick()
+            compose.onNodeWithTag("home_feed").performScrollToNode(hasTestTag("home_reviews"))
+            val homeReview = hasText(comment) and hasAnyAncestor(hasTestTag("home_reviews"))
+            compose.waitUntil(60_000) { compose.onAllNodes(homeReview).fetchSemanticsNodes().isNotEmpty() }
+            val expectedRating = runBlocking { repo.cafeRating(cafe.id) }.rating
+            val homeRating = hasText(" $expectedRating") and hasAnyAncestor(hasTestTag("home_cafes"))
+            compose.waitUntil(60_000) { compose.onAllNodes(homeRating).fetchSemanticsNodes().isNotEmpty() }
+            screenshot("qa-home-real-review")
+            compose.onNode(homeReview).performClick()
+            waitForText("Ulasan Saya")
+            waitForText(comment)
+            compose.onNodeWithContentDescription("Kembali").performClick()
+
+            compose.onNodeWithTag("home_feed").performScrollToNode(hasTestTag("home_cafes"))
+            compose.onNode(recommended).performClick()
+            waitForText(comment)
+            compose.onAllNodesWithText("Edit ulasan")[0].performScrollTo().performClick()
+            waitForText("Komentar (opsional)")
+            compose.onNodeWithContentDescription("3 Bintang").performClick()
+            compose.onNode(hasText("Komentar (opsional)") and hasSetTextAction()).performTextReplacement("$comment diedit")
+            compose.onNodeWithText("Simpan").performSemanticsAction(SemanticsActions.OnClick) { it() }
+            waitForSavedReview(savedReview.id, "$comment diedit")
+            assertEquals(3, runBlocking { repo.loadMyReview(cafe.id) }?.rating)
+            assertEquals(baseline + 1, runBlocking { repo.cafeRating(cafe.id) }.reviewCount)
+            screenshot("qa-review-edited")
+            compose.onNodeWithContentDescription("Hapus ulasan saya").performScrollTo().performClick()
+            waitForText("Tulis Ulasan")
+            assertNull(runBlocking { repo.loadMyReview(cafe.id) })
+            assertEquals(baseline, runBlocking { repo.cafeRating(cafe.id) }.reviewCount)
+        } finally {
+            runBlocking {
+                val mine = repo.loadMyReview(cafe.id)
+                if (mine != null && mine.comment.startsWith(comment)) repo.deleteMyReview(cafe.id)
+            }
+        }
     }
 }

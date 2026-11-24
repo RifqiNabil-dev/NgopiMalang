@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -154,14 +155,29 @@ fun HomeScreen(
                 )
             }
             item {
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    if (cafeState.reviewsLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    cafeState.reviewsError?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                        TextButton(onClick = onRetryCafes) { Text("Coba lagi ulasan") }
+                    }
+                    if (!cafeState.reviewsLoading && cafeState.reviewsError == null && cafeState.reviews.isEmpty()) {
+                        Text("Belum ada ulasan terbaru.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            item {
                 LazyRow(
+                    modifier = Modifier.testTag("home_reviews"),
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(items = DummyData.reviews, key = { it.id }) { review ->
+                    items(items = cafeState.reviews, key = { it.id }) { review ->
                         ReviewCard(
                             review = review,
-                            modifier = Modifier.width(280.dp),
+                            modifier = Modifier
+                                .width(280.dp)
+                                .height(195.dp),
                             onClick = onOpenReviews
                         )
                     }

@@ -32,6 +32,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ngopimalang.app.core.components.AppCard
 import com.ngopimalang.app.core.model.Cafe
+import com.ngopimalang.app.features.reviews.ReviewSection
+import com.ngopimalang.app.features.reviews.ReviewSectionViewModel
 import java.util.Locale
 
 /** Shared detail entry: callers pass a Cloud UUID; each feature can supply its own section. */
@@ -74,7 +76,12 @@ fun DirectoryDetailScreen(
             Text("Cafe tidak ditemukan atau tidak dapat diakses", style = MaterialTheme.typography.titleMedium)
         }
         state.cafe?.let { cafe ->
-            CafeHero(cafe)
+            val reviewsViewModel: ReviewSectionViewModel = viewModel(key = "review_section_${cafe.id}")
+            val reviews by reviewsViewModel.uiState.collectAsStateWithLifecycle()
+            val displayedCafe = if (reviews.cafeId == cafe.id && !reviews.isLoading && reviews.errorMessage == null) {
+                cafe.copy(rating = reviews.rating, reviewCount = reviews.reviewCount)
+            } else cafe
+            CafeHero(displayedCafe)
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 if (!cafe.isActive) SuggestionChip(onClick = {}, label = { Text("Tidak aktif / arsip") })
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -98,11 +105,6 @@ fun DirectoryDetailScreen(
                 cafe.description?.takeIf { it.isNotBlank() }?.let { description ->
                     AppCard { DetailItem("Tentang cafe", description) }
                 }
-                AppCard {
-                    DetailItem("Ulasan pengunjung", cafe.rating?.let {
-                        String.format(Locale.US, "%.1f / 5 • %d ulasan", it, cafe.reviewCount)
-                    } ?: "Belum ada ulasan")
-                }
                 if (cafe.address.isNotBlank()) OutlinedButton(onClick = {
                     try {
                         context.startActivity(Intent(Intent.ACTION_VIEW,
@@ -111,6 +113,7 @@ fun DirectoryDetailScreen(
                 }, modifier = Modifier.fillMaxWidth()) { Text("Buka di peta") }
                 intentError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 bookmarkAction(cafe.id)
+                ReviewSection(cafe.id, cafe.name, cafe.rating ?: 0.0, reviewsViewModel)
                 reviewSection(cafe.id)
                 if (isAdmin) AppCard {
                     Text("Kelola cafe", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

@@ -1,7 +1,9 @@
 # Progress 2 Direktori Cafe — Ossa
 
+Catatan pemeriksaan bertanggal di bawah adalah riwayat pengerjaan. Untuk kondisi terbaru, lihat bagian integrasi ulasan pada akhir dokumen.
+
 ## Status dan ruang lingkup
-Fondasi origin/progres2 digabung ke codex/direktori-cafe-ossa. Integrasi memakai Supabase Cloud kelompok. Tabel dan policy tidak diubah. Konfigurasi URL/publishable key hanya di local.properties yang diabaikan Git; password admin tidak disimpan di kode aplikasi.
+Proyek utama berada di D:\NgopiMalang pada branch direktori-cafe-ossa. Fondasi origin/progres2 dan modul ulasan origin/shel-branch sudah digabung. Integrasi memakai Supabase Cloud kelompok. Tabel dan policy tidak diubah. Konfigurasi URL/publishable key hanya di local.properties yang diabaikan Git; password admin tidak disimpan di kode aplikasi.
 
 ## Implementasi
 - CafeRepository menjadi satu pintu akses cafes_with_rating, cafes, vibes, cafe_vibes, dan bucket cafe-photos.
@@ -32,7 +34,7 @@ Fondasi origin/progres2 digabung ke codex/direktori-cafe-ossa. Integrasi memakai
 ## Batas integrasi tim
 Model Cafe mempertahankan priceRange, vibes dan imageResId agar modul Progress 1 lain tetap dapat dikompilasi. Data database memiliki priceMin/priceMax, rating nullable, reviewCount, photoPath, photoUrl, dan isActive. CafeCard sudah mendukung foto jaringan serta badge arsip.
 
-Detail menyediakan slot composable reviewSection(cafeId) dan bookmarkAction(cafeId). Branch progres2 yang diperiksa belum menyediakan ReviewSection.kt dan BookmarkAction.kt; slot sengaja kosong sampai komponen anggota terkait tersedia. Tidak ada repository ulasan/bookmark buatan Direktori. Modul Vibe/Bookmark/Event masih perlu mengganti ID dummy dengan UUID database di branch masing-masing; ID seperti c1 tidak dapat menunjuk data Cloud.
+ReviewSection dari modul ulasan shel-branch sudah dipasang pada detail bersama. Slot composable tambahan reviewSection(cafeId) dan bookmarkAction(cafeId) dipertahankan untuk kompatibilitas; komponen bookmark masih menunggu integrasi pemiliknya. Modul Vibe/Bookmark/Event masih perlu mengganti ID dummy dengan UUID database di branch masing-masing; ID seperti c1 tidak dapat menunjuk data Cloud.
 
 ## Pengujian database asli
 Login admin dan pembacaan role berhasil. Uji REST dengan cafe sementara berhasil: insert → baca cafes_with_rating → update harga → upload PNG → signed URL → relasi vibe → arsip → hapus. Foto dan baris uji dibersihkan pada akhir tes. Ini menguji kontrak Cloud, belum menggantikan pengujian UI Android atau RLS dengan akun user biasa.
@@ -49,7 +51,7 @@ Login admin dan pembacaan role berhasil. Uji REST dengan cafe sementara berhasil
 ## Build
 Fondasi memakai AGP 8.7.3 dan Kotlin 2.0.21. Wrapper diselaraskan ke Gradle 8.9 dan JVM daemon 21. Android Studio perlu Gradle JDK 21, bukan JBR 25 untuk kombinasi ini. Storage mengikuti versi Supabase fondasi 3.0.3; Coil Compose dipatok 2.7.0.
 
-Implementasi sudah disalin dan diterapkan pada proyek utama D:\NgopiMalang, branch direktori-cafe-ossa. Perubahan belum di-push. Salinan lama di C sudah dicadangkan dan dihapus; proyek aktif tetap di D.
+Implementasi sudah disalin dan diterapkan pada proyek utama D:\NgopiMalang, branch direktori-cafe-ossa. Salinan lama di C sudah dicadangkan dan dihapus; proyek aktif tetap di D.
 
 ## Hasil build 23 November 2026
 assembleDebug dan testDebugUnitTest berhasil dengan Gradle 8.9 / JDK 21. Lima tes unit lulus tanpa failure/error. APK berhasil dibuat. Pengujian visual pada emulator serta login akun user biasa belum dilakukan karena akses perangkat virtual Android tidak tersedia dari sesi ini.
@@ -94,3 +96,16 @@ Akun QA non-admin dibuat melalui pendaftaran biasa, dengan role user dari user_r
 
 Build debug, lima tes unit direktori, serta dua skenario UI pada emulator lokal API 29 lulus. Hasil instrumentasi: OK (2 tests), 41,316 detik. Admin tetap dapat mengelola cafe pada tata letak baru. User biasa diuji login, rekomendasi Cloud di Home, navigasi kartu ke detail bersama, ketiadaan tombol edit/hapus di detail, serta ketiadaan tombol tambah di Direktori. Bukti lokal: .codex-work/evidence/admin-and-user-ui-test.txt dan qa-user-home.png, qa-user-detail.png, qa-user-directory.png. Akun user biasa tidak lagi termasuk bagian yang belum diuji; batas lain pada catatan sebelumnya (pemilih foto sistem, intent aplikasi peta, process death dan kegagalan jaringan) tetap berlaku.
 
+## Integrasi ulasan shel-branch — 24 November 2026 (status terbaru)
+
+Pekerjaan direktori disimpan pada commit 74988da, lalu origin/shel-branch (bb765ab) digabung dengan mempertahankan histori anggota. Konflik DirectoryDetailScreen diselesaikan dengan mempertahankan fitur Cloud/admin dan memasang ReviewSection serta ReviewSectionViewModel milik modul ulasan.
+
+Detail membaca ulasan asli berdasarkan UUID cafe. Rating hero, rata-rata, dan jumlah ulasan memakai agregat cafes_with_rating dan diperbarui setelah simpan/hapus. Home membaca enam ulasan terbaru melalui ReviewRepository dan memakai ReviewCard bersama. Ulasan contoh tidak disisipkan ketika database kosong. Kegagalan pembacaan menampilkan error/retry, bukan dianggap data kosong.
+
+Role ulasan mengikuti user_roles seperti fondasi auth/direktori. Tombol tulis menunggu role terverifikasi, pengguna biasa dapat mengelola ulasannya, dan admin memakai alur moderasi. Email dan metadata yang dapat diedit pengguna tidak digunakan untuk menetapkan hak admin. Pembatasan database tetap bergantung pada RLS yang sudah ada; integrasi ini tidak mengubah tabel/policy.
+
+Batas: daftar direktori dibatasi 50 cafe, daftar ulasan detail 50 terbaru, daftar global 100 terbaru, dan ringkasan global maksimal 100 cafe. Agregat detail berasal dari database, bukan hanya rata-rata 50 kartu yang dimuat. Pencarian/pagination lanjutan belum dibuat. Komponen bookmark bersama belum dipasang; fitur Event/Vibe/Bookmark tetap mengikuti implementasi pemiliknya. Pemilih foto sistem, aplikasi peta eksternal, process death, serta seluruh kondisi jaringan belum diuji melalui UI.
+
+Hasil verifikasi integrasi: assembleDebug, testDebugUnitTest, dan assembleDebugAndroidTest berhasil. Lima tes unit direktori (ditambah satu tes contoh bawaan) lulus. Ketiga skenario emulator lokal API 29 lulus sebagai proses instrumentasi terpisah: admin cafe 42,314 detik; akses user biasa 16,581 detik; CRUD ulasan user dengan readback Home/global/detail 25,425 detik. Uji ulasan mencakup rating wajib, simpan ke Cloud, pembacaan ulang repository, pembaruan rating/jumlah ulasan, kemunculan kartu di Home, halaman Ulasan Saya, edit, dan hapus. Akun QA tidak menimpa ulasan yang sudah ada; fixture ulasan dibersihkan. Kredensial hanya berasal dari argumen instrumentasi dan file lokal yang diabaikan Git.
+
+Satu percobaan awal rangkaian tes sempat berhenti karena renderer OpenGL emulator saat pergantian Activity; pengujian akhir dijalankan per skenario dan semuanya lulus. Penantian tes ulasan memakai identitas kartu agar tidak mengira teks editor sebagai hasil simpan. Bukti lokal tersimpan di .codex-work/evidence/final-*.txt, qa-review-created.png, qa-review-edited.png, dan qa-home-real-review.png. Dataset Cloud setelah cleanup tetap 12 cafe, 12 foto, 8 vibe, 28 cafe_vibes; ulasan kembali 0 karena data uji dihapus.

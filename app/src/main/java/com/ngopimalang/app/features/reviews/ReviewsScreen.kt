@@ -1,10 +1,13 @@
 package com.ngopimalang.app.features.reviews
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,34 +16,163 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ngopimalang.app.core.components.RatingStars
 import com.ngopimalang.app.core.components.ReviewCard
 import com.ngopimalang.app.core.components.SectionHeader
+import com.ngopimalang.app.core.components.formatReviewDate
+import com.ngopimalang.app.core.model.Review
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewsScreen(
-    onNavigateBack: () -> Unit = {},
+    onNavigateBack: (() -> Unit)? = null,
     title: String = "Ulasan & Rating",
-    owner: String = "Shelfina Khayla Anindita",
+    owner: String = ReviewsViewModel.DEFAULT_OWNER,
+    cafeName: String? = null,
     listComponent: String = "HorizontalPager + LazyColumn",
     flows: List<String> = listOf("Daftar Ulasan", "Detail Ulasan", "Form Ulasan"),
     viewModel: ReviewsViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val formError by viewModel.formError.collectAsStateWithLifecycle()
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
+    var selectedReviewDetail by remember { mutableStateOf<Review?>(null) }
+    var reviewPendingDelete by remember { mutableStateOf<Review?>(null) }
+    var showCafePicker by remember { mutableStateOf(false) }
+    var showLoginRequiredDialog by remember { mutableStateOf(false) }
+    var targetCafeIdForForm by remember { mutableStateOf<String?>(null) }
+    var editingReview by remember { mutableStateOf<Review?>(null) }
+
+    val isRegularUserMode = !uiState.isAdmin && cafeName == null
+
+    LaunchedEffect(uiState.isAdmin, cafeName) {
+        viewModel.setOnlyMine(!uiState.isAdmin && cafeName == null)
+    }
+
+    val displayedReviews = remember(
+        uiState.reviews,
+        cafeName,
+        isRegularUserMode,
+        uiState.selectedCafeFilter
+    ) {
+        when {
+            cafeName != null -> uiState.reviews.filter {
+                it.cafeName.equals(cafeName, ignoreCase = true)
+            }
+            isRegularUserMode -> uiState.reviews.filter { it.isMine }
+            uiState.selectedCafeFilter != null -> uiState.reviews.filter {
+                it.cafeName.equals(uiState.selectedCafeFilter, ignoreCase = true)
+            }
+            else -> uiState.reviews
+        }
+    }
+
+    val displayedReviewCount = remember(
+        displayedReviews,
+        cafeName,
+        isRegularUserMode,
+        uiState.selectedCafeFilter,
+        uiState.ratingFilter,
+        uiState.summaryReviewCount
+    ) {
+        if (cafeName != null ||
+            isRegularUserMode ||
+            uiState.selectedCafeFilter != null ||
+            uiState.ratingFilter != null
+        ) {
+            displayedReviews.size
+        } else {
+            uiState.summaryReviewCount
+        }
+    }
+
+    val displayedAverageRating = remember(
+        displayedReviews,
+        cafeName,
+        isRegularUserMode,
+        uiState.selectedCafeFilter,
+        uiState.ratingFilter,
+        uiState.summaryRating
+    ) {
+        if (cafeName != null ||
+            isRegularUserMode ||
+            uiState.selectedCafeFilter != null ||
+            uiState.ratingFilter != null
+        ) {
+            if (displayedReviews.isNotEmpty()) {
+                displayedReviews.map { it.rating }.average()
+            } else {
+                0.0
+            }
+        } else {
+            uiState.summaryRating ?: 0.0
+        }
+    }
+
+    val openWriteForm: () -> Unit = {
+        if (!uiState.isLoggedIn) {
+            showLoginRequiredDialog = true
+        } else {
+            viewModel.clearFormError()
+            val matchedCafe = if (cafeName != null) {
+                uiState.cafeOptions.firstOrNull { it.name.equals(cafeName, ignoreCase = true) }
+            } else {
+                null
+            }
+
+            if (matchedCafe != null) {
+                editingReview = uiState.reviews.firstOrNull {
+                    it.isMine && it.cafeId == matchedCafe.id
+                }
+                targetCafeIdForForm = matchedCafe.id
+            } else {
+                showCafePicker = true
+            }
+        }
+    }
+
+    val headerTitle = when {
+        cafeName != null -> "Ulasan $cafeName"
+        isRegularUserMode -> "Ulasan Saya"
+        else -> title
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(title) }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        if (onNavigateBack != null) {
+                            onNavigateBack()
+                        } else {
+                            backDispatcher?.onBackPressed()
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Kembali"
+                    )
+                }
+                Text(
+                    text = headerTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Tulis Ulasan")
+            if (uiState.canWrite || !uiState.isLoggedIn) {
+                FloatingActionButton(onClick = openWriteForm) {
+                    Icon(Icons.Default.Add, contentDescription = "Tulis Ulasan")
+                }
             }
         }
     ) { innerPadding ->
@@ -52,8 +184,10 @@ fun ReviewsScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
             ) {
                 Row(
                     modifier = Modifier
@@ -62,23 +196,55 @@ fun ReviewsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        val ownerLabel = uiState.currentUserName.ifBlank { owner }
                         Text(
-                            text = "Rata-rata Rating",
+                            text = when {
+                                cafeName != null -> "Rating $cafeName"
+                                isRegularUserMode -> "Ulasan oleh $ownerLabel"
+                                uiState.selectedCafeFilter != null -> "Rating ${uiState.selectedCafeFilter}"
+                                else -> "Rata-rata Rating Semua Cafe"
+                            },
                             style = MaterialTheme.typography.labelLarge
                         )
                         Text(
-                            text = String.format("%.1f / 5.0", uiState.averageRating),
+                            text = String.format(Locale.US, "%.1f / 5.0", displayedAverageRating),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        RatingStars(rating = uiState.averageRating.toInt())
+                        RatingStars(rating = displayedAverageRating.toInt())
                     }
                     Text(
-                        text = "${uiState.allReviews.size} Ulasan",
+                        text = "$displayedReviewCount Ulasan",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
+                }
+            }
+
+            if (uiState.isAdmin && cafeName == null && uiState.cafeOptions.isNotEmpty()) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 4.dp)
+                ) {
+                    item {
+                        FilterChip(
+                            selected = uiState.selectedCafeFilter == null,
+                            onClick = { viewModel.onCafeFilterChange(null) },
+                            label = { Text("Semua Cafe") }
+                        )
+                    }
+                    items(uiState.cafeOptions, key = { it.id }) { cafeOption ->
+                        FilterChip(
+                            selected = uiState.selectedCafeFilter.equals(
+                                cafeOption.name,
+                                ignoreCase = true
+                            ),
+                            onClick = { viewModel.onCafeFilterChange(cafeOption.name) },
+                            label = { Text(cafeOption.name) }
+                        )
+                    }
                 }
             }
 
@@ -98,23 +264,76 @@ fun ReviewsScreen(
                 )
                 items(filters) { (ratingValue, label) ->
                     FilterChip(
-                        selected = uiState.selectedRating == ratingValue,
-                        onClick = { viewModel.filterByRating(ratingValue) },
+                        selected = uiState.ratingFilter == ratingValue,
+                        onClick = { viewModel.onRatingFilterChange(ratingValue) },
                         label = { Text(label) }
                     )
                 }
             }
 
+            if (uiState.isLoading) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-            if (uiState.filteredReviews.isEmpty()) {
+            if (!uiState.errorMessage.isNullOrBlank()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
+                        .weight(1f)
+                        .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Belum ada ulasan untuk rating ini.")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = uiState.errorMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Button(onClick = { viewModel.onRetry() }) {
+                            Text("Coba Lagi")
+                        }
+                    }
+                }
+            } else if (!uiState.isLoading && displayedReviews.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = when {
+                                isRegularUserMode && uiState.ratingFilter != null ->
+                                    "Kamu belum menulis ulasan untuk rating ini."
+                                isRegularUserMode ->
+                                    "Kamu belum menulis ulasan."
+                                cafeName != null ->
+                                    "Belum ada ulasan untuk cafe ini."
+                                uiState.ratingFilter != null ->
+                                    "Belum ada ulasan untuk rating ini."
+                                else ->
+                                    "Belum ada ulasan."
+                            },
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (uiState.canWrite || !uiState.isLoggedIn) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(onClick = openWriteForm) {
+                                Text("Tulis Ulasan Sekarang")
+                            }
+                        }
+                    }
                 }
             } else {
                 LazyColumn(
@@ -122,11 +341,27 @@ fun ReviewsScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.filteredReviews, key = { it.id }) { review ->
+                    items(displayedReviews, key = { it.id }) { review ->
                         ReviewCard(
                             review = review,
                             modifier = Modifier.fillMaxWidth(),
-                            onClick = { }
+                            onClick = { selectedReviewDetail = review },
+                            onEditClick = if (review.isMine && uiState.canWrite) {
+                                {
+                                    viewModel.clearFormError()
+                                    editingReview = review
+                                    targetCafeIdForForm = review.cafeId
+                                }
+                            } else null,
+                            onDeleteClick = when {
+                                uiState.isAdmin -> {
+                                    { reviewPendingDelete = review }
+                                }
+                                review.isMine && uiState.canWrite -> {
+                                    { viewModel.deleteMyReviewForCafe(review.cafeId) }
+                                }
+                                else -> null
+                            }
                         )
                     }
                 }
@@ -134,91 +369,162 @@ fun ReviewsScreen(
         }
     }
 
-    if (showAddDialog) {
-        AddReviewDialog(
-            onDismiss = { showAddDialog = false },
-            onSubmit = { userName, cafeName, rating, comment, menu ->
-                viewModel.addReview(userName, cafeName, rating, comment, menu)
-                showAddDialog = false
+    reviewPendingDelete?.let { targetReview ->
+        AlertDialog(
+            onDismissRequest = { if (!uiState.isSaving) reviewPendingDelete = null },
+            title = { Text("Hapus Ulasan (Admin)") },
+            text = {
+                Text(
+                    "Hapus ulasan dari ${targetReview.userName} untuk ${targetReview.cafeName.ifBlank { "cafe ini" }}?"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !uiState.isSaving,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    onClick = {
+                        viewModel.deleteReviewByAdmin(targetReview)
+                        reviewPendingDelete = null
+                    }
+                ) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !uiState.isSaving,
+                    onClick = { reviewPendingDelete = null }
+                ) {
+                    Text("Batal")
+                }
             }
+        )
+    }
+
+    if (showLoginRequiredDialog) {
+        AlertDialog(
+            onDismissRequest = { showLoginRequiredDialog = false },
+            title = { Text("Login Diperlukan") },
+            text = { Text("Silakan login terlebih dahulu di tab Profil untuk menulis ulasan.") },
+            confirmButton = {
+                TextButton(onClick = { showLoginRequiredDialog = false }) {
+                    Text("Mengerti")
+                }
+            }
+        )
+    }
+
+    if (showCafePicker) {
+        AlertDialog(
+            onDismissRequest = { showCafePicker = false },
+            title = { Text("Pilih Cafe yang Diulas") },
+            text = {
+                if (uiState.cafeOptions.isEmpty()) {
+                    Text("Daftar cafe belum tersedia.")
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 320.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(uiState.cafeOptions, key = { it.id }) { cafeOption ->
+                            ListItem(
+                                headlineContent = { Text(cafeOption.name) },
+                                modifier = Modifier.clickable {
+                                    showCafePicker = false
+                                    viewModel.clearFormError()
+                                    editingReview = uiState.reviews.firstOrNull {
+                                        it.isMine && it.cafeId == cafeOption.id
+                                    }
+                                    targetCafeIdForForm = cafeOption.id
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCafePicker = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    targetCafeIdForForm?.let { cafeId ->
+        ReviewFormDialog(
+            existingReview = editingReview,
+            isSaving = uiState.isSaving,
+            externalErrorMessage = formError,
+            onDismiss = {
+                if (!uiState.isSaving) {
+                    targetCafeIdForForm = null
+                    editingReview = null
+                }
+            },
+            onSubmit = { draft ->
+                viewModel.upsertReviewForCafe(
+                    cafeId = cafeId,
+                    draft = draft,
+                    onSuccess = {
+                        targetCafeIdForForm = null
+                        editingReview = null
+                    }
+                )
+            }
+        )
+    }
+
+    selectedReviewDetail?.let { review ->
+        ReviewDetailDialog(
+            review = review,
+            onDismiss = { selectedReviewDetail = null }
         )
     }
 }
 
 @Composable
-fun AddReviewDialog(
-    onDismiss: () -> Unit,
-    onSubmit: (userName: String, cafeName: String, rating: Int, comment: String, menu: String) -> Unit
+fun ReviewDetailDialog(
+    review: Review,
+    onDismiss: () -> Unit
 ) {
-    var userName by remember { mutableStateOf("") }
-    var cafeName by remember { mutableStateOf("") }
-    var comment by remember { mutableStateOf("") }
-    var favoriteMenu by remember { mutableStateOf("") }
-    var rating by remember { mutableIntStateOf(5) }
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tulis Ulasan Baru") },
+        title = {
+            Column {
+                Text(
+                    text = review.cafeName.ifBlank { "Detail Ulasan" },
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Oleh ${review.userName} • ${formatReviewDate(review.createdAt)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = userName,
-                    onValueChange = { userName = it },
-                    label = { Text("Nama Anda") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = cafeName,
-                    onValueChange = { cafeName = it },
-                    label = { Text("Nama Cafe") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = favoriteMenu,
-                    onValueChange = { favoriteMenu = it },
-                    label = { Text("Menu Favorit") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = comment,
-                    onValueChange = { comment = it },
-                    label = { Text("Komentar / Ulasan") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Rating:")
-                    Slider(
-                        value = rating.toFloat(),
-                        onValueChange = { rating = it.toInt() },
-                        valueRange = 1f..5f,
-                        steps = 3,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 8.dp)
+                RatingStars(rating = review.rating)
+                if (review.favoriteMenu.isNotBlank()) {
+                    Text(
+                        text = "Menu Favorit: ${review.favoriteMenu}",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Medium
                     )
-                    Text("$rating ⭐")
                 }
+                HorizontalDivider()
+                Text(
+                    text = review.comment.ifBlank { "(Tidak ada komentar tertulis)" },
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    if (comment.isNotBlank()) {
-                        onSubmit(userName, cafeName, rating, comment, favoriteMenu)
-                    }
-                }
-            ) {
-                Text("Kirim")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Batal")
+            TextButton(onClick = onDismiss) {
+                Text("Tutup")
             }
         }
     )
