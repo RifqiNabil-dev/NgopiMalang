@@ -165,7 +165,8 @@ object DummyData {
             title = "Live Acoustic Night",
             cafeName = "Bara Coffee House",
             category = EventCategory.EVENT,
-            schedule = "Sab, 21 Des 2025 • 19.00 WIB",
+            startsAt = Instant.parse("2026-12-21T12:00:00Z"),
+            endsAt = Instant.parse("2026-12-21T15:00:00Z"),
             description = "Penampilan akustik tiga musisi lokal Malang. Gratis untuk semua pengunjung."
         ),
         EventPromo(
@@ -173,7 +174,8 @@ object DummyData {
             title = "Diskon 30% Semua Manual Brew",
             cafeName = "Ruang Seduh",
             category = EventCategory.PROMO,
-            schedule = "Setiap hari • 14.00 - 17.00 WIB",
+            startsAt = Instant.parse("2026-12-01T07:00:00Z"),
+            endsAt = Instant.parse("2026-12-31T10:00:00Z"),
             description = "Nikmati potongan harga untuk seluruh menu manual brew di jam santai."
         ),
         EventPromo(
@@ -181,7 +183,8 @@ object DummyData {
             title = "Pameran Foto Kopi Nusantara",
             cafeName = "Kopi Sae Malang",
             category = EventCategory.EVENT,
-            schedule = "20 - 27 Des 2025 • 10.00 - 21.00 WIB",
+            startsAt = Instant.parse("2026-12-20T03:00:00Z"),
+            endsAt = Instant.parse("2026-12-27T14:00:00Z"),
             description = "Pameran mini 24 karya fotografi tentang perjalanan kopi dari petani ke cangkir."
         ),
         EventPromo(
@@ -189,7 +192,8 @@ object DummyData {
             title = "Beli 1 Gratis 1 Kopi Susu",
             cafeName = "Ngopi Bareng 24",
             category = EventCategory.PROMO,
-            schedule = "Min - Kam • 22.00 - 02.00 WIB",
+            startsAt = Instant.parse("2026-12-15T15:00:00Z"),
+            endsAt = Instant.parse("2026-12-15T19:00:00Z"),
             description = "Promo begadang: setiap pembelian kopi susu mendapat satu gelas gratis."
         ),
         EventPromo(
@@ -197,7 +201,8 @@ object DummyData {
             title = "Barista Workshop: Latte Art 101",
             cafeName = "Latar Ijen Roastery",
             category = EventCategory.EVENT,
-            schedule = "Ming, 28 Des 2025 • 10.00 WIB",
+            startsAt = Instant.parse("2026-12-28T03:00:00Z"),
+            endsAt = Instant.parse("2026-12-28T07:00:00Z"),
             description = "Pelajari teknik frothing susu dan pouring latte art bersama Champion Barista Malang."
         ),
         EventPromo(
@@ -205,7 +210,8 @@ object DummyData {
             title = "Diskon Student 20% Pakai KTM",
             cafeName = "Lapan Puluh Coffee",
             category = EventCategory.PROMO,
-            schedule = "Setiap Hari • 08.00 - 16.00 WIB",
+            startsAt = Instant.parse("2026-12-01T01:00:00Z"),
+            endsAt = Instant.parse("2026-12-31T09:00:00Z"),
             description = "Tunjukkan KTM UB/UM/UMM aktif untuk menikmati potongan 20% pada semua menu."
         ),
         EventPromo(
@@ -213,7 +219,8 @@ object DummyData {
             title = "Sunset Chill Beats & Coffee",
             cafeName = "Senja Coffee & View",
             category = EventCategory.EVENT,
-            schedule = "Jum, 26 Des 2025 • 16.30 WIB",
+            startsAt = Instant.parse("2026-12-26T09:30:00Z"),
+            endsAt = Instant.parse("2026-12-26T12:00:00Z"),
             description = "Sesi ngopi sore menikmati sunset dengan live DJ set santai khas pegunungan Malang."
         ),
         EventPromo(
@@ -221,7 +228,8 @@ object DummyData {
             title = "Buy 1 Get 1 Pastry Choice",
             cafeName = "Griya Coffee & Bites",
             category = EventCategory.PROMO,
-            schedule = "Sab - Ming • 08.00 - 11.00 WIB",
+            startsAt = Instant.parse("2026-12-20T01:00:00Z"),
+            endsAt = Instant.parse("2026-12-20T04:00:00Z"),
             description = "Beli 1 croissant atau pastry manis gratis 1 pastry segar pilihan hari ini."
         )
     )

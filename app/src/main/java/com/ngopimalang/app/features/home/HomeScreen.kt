@@ -102,11 +102,24 @@ fun HomeScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(items = DummyData.events, key = { it.id }) { event ->
+                    if (cafeState.eventsLoading) {
+                        item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) }
+                    }
+                    cafeState.eventsError?.let {
+                        item {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                        }
+                    }
+                    items(items = cafeState.events, key = { it.id }) { event ->
                         EventCard(
                             event = event,
                             modifier = Modifier.width(260.dp),
-                            onClick = onOpenEventPromo
+                            onClick = onOpenEventPromo,
+                            showStatus = false
                         )
                     }
                 }

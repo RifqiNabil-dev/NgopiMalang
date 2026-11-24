@@ -19,15 +19,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ngopimalang.app.core.model.EventCategory
 import com.ngopimalang.app.core.model.EventPromo
+import com.ngopimalang.app.core.model.EventStatus
 
 /**
  * Kartu event/promo. Pemilik fitur: Rifqi (features.eventpromo).
+ *
+ * Badge status hanya ditampilkan bila [showStatus] true, supaya dipakai di daftar
+ * dengan tinggi kartu yang sama seperti sebelumnya.
  */
 @Composable
 fun EventCard(
     event: EventPromo,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    showStatus: Boolean = true
 ) {
     Card(
         onClick = onClick,
@@ -81,6 +86,9 @@ fun EventCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+            if (showStatus) {
+                StatusPill(event.status)
+            }
             Text(
                 text = event.cafeName,
                 style = MaterialTheme.typography.bodySmall,
@@ -96,5 +104,34 @@ fun EventCard(
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+/**
+ * Badge status event: Akan datang / Berlangsung / Selesai.
+ * Warna diambil dari tema, tidak ada hex di sini (dok 08 bagian 1).
+ */
+@Composable
+private fun StatusPill(status: EventStatus) {
+    val container = when (status) {
+        EventStatus.UPCOMING -> MaterialTheme.colorScheme.secondaryContainer
+        EventStatus.ONGOING -> MaterialTheme.colorScheme.primaryContainer
+        EventStatus.FINISHED -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    val content = when (status) {
+        EventStatus.UPCOMING -> MaterialTheme.colorScheme.onSecondaryContainer
+        EventStatus.ONGOING -> MaterialTheme.colorScheme.onPrimaryContainer
+        EventStatus.FINISHED -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = container
+    ) {
+        Text(
+            text = status.label,
+            style = MaterialTheme.typography.labelSmall,
+            color = content,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+        )
     }
 }
