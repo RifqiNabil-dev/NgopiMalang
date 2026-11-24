@@ -5,10 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,7 +30,9 @@ import com.ngopimalang.app.core.model.EventStatus
  *
  * [showStatus]      — tampilkan badge status (UPCOMING/ONGOING/FINISHED). Default true (di daftar event).
  * [showDescription] — tampilkan cuplikan deskripsi. Default true; set false di beranda agar card lebih ringkas.
- * [showSchedule]    — tampilkan baris jadwal. Default true; set false di beranda agar tidak berdempetan.
+ * [showSchedule]    — tampilkan jadwal ringkas (scheduleShort) di bawah judul dengan ikon kalender.
+ *                     Di beranda: true tapi pakai format pendek. Di daftar event: true pakai schedule penuh.
+ * [useShortSchedule]— pakai event.scheduleShort (format ringkas) alih-alih event.schedule (format penuh).
  */
 @Composable
 fun EventCard(
@@ -35,7 +41,8 @@ fun EventCard(
     onClick: () -> Unit = {},
     showStatus: Boolean = true,
     showDescription: Boolean = true,
-    showSchedule: Boolean = true
+    showSchedule: Boolean = true,
+    useShortSchedule: Boolean = false
 ) {
     Card(
         onClick = onClick,
@@ -50,42 +57,28 @@ fun EventCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Baris atas: badge kategori (kiri) + jadwal singkat (kanan) — jadwal hanya jika showSchedule
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = if (showSchedule) Arrangement.SpaceBetween else Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
+            // Baris atas: badge kategori saja
+            Surface(
+                shape = CircleShape,
+                color = if (event.category == EventCategory.PROMO) {
+                    MaterialTheme.colorScheme.tertiaryContainer
+                } else {
+                    MaterialTheme.colorScheme.primaryContainer
+                }
             ) {
-                Surface(
-                    shape = CircleShape,
+                Text(
+                    text = event.category.label,
+                    style = MaterialTheme.typography.labelSmall,
                     color = if (event.category == EventCategory.PROMO) {
-                        MaterialTheme.colorScheme.tertiaryContainer
+                        MaterialTheme.colorScheme.onTertiaryContainer
                     } else {
-                        MaterialTheme.colorScheme.primaryContainer
-                    }
-                ) {
-                    Text(
-                        text = event.category.label,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (event.category == EventCategory.PROMO) {
-                            MaterialTheme.colorScheme.onTertiaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-                if (showSchedule) {
-                    Text(
-                        text = event.schedule,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
             }
+
+            // Judul event
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.titleSmall,
@@ -93,9 +86,33 @@ fun EventCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+
+            // Jadwal — ikon kalender + teks, di bawah judul
+            if (showSchedule) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (useShortSchedule) event.scheduleShort else event.schedule,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
             if (showStatus) {
                 StatusPill(event.status)
             }
+
             if (event.cafeName.isNotBlank()) {
                 Text(
                     text = event.cafeName,
@@ -105,6 +122,7 @@ fun EventCard(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+
             if (showDescription && event.description.isNotBlank()) {
                 Text(
                     text = event.description,

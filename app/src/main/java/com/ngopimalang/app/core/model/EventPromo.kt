@@ -36,11 +36,7 @@ enum class EventStatus(val label: String) {
 }
 
 /**
- * Model event & promo. Pemilik fitur: Rifqi (features.eventpromo).
- *
- * `schedule` dan `cafeName` dipertahankan sebagai nilai turunan supaya
- * [com.ngopimalang.app.core.components.EventCard] tidak perlu diubah.
- * Sumber kebenaran tetap `startsAt`, `endsAt`, dan `cafeId`.
+ * Model event & promo.(features.eventpromo).
  */
 data class EventPromo(
     val id: String,
@@ -57,8 +53,10 @@ data class EventPromo(
 ) {
     val status: EventStatus get() = EventStatus.of(startsAt, endsAt)
 
-    /** Label jadwal siap tampil; dibuat di UI-layer, bukan disimpan sebagai data. */
     val schedule: String get() = formatSchedule(startsAt, endsAt)
+
+    /** Format ringkas untuk preview card — satu hari: "21 Des • 19.00", multi-hari: "20 - 27 Des" */
+    val scheduleShort: String get() = formatScheduleShort(startsAt, endsAt)
 }
 
 private val MONTHS_SHORT = listOf("Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des")
@@ -82,5 +80,29 @@ fun formatSchedule(startsAt: Instant, endsAt: Instant, zone: TimeZone = TimeZone
     } else {
         val endDate = "${end.dayOfMonth} ${MONTHS_SHORT.getOrElse(end.monthNumber - 1) { "" }} ${end.year}"
         "$startDate $startTime - $endDate $endTime WIB"
+    }
+}
+
+/**
+ * Format ringkas untuk card preview (maks ~20 karakter):
+ * - Satu hari  : "21 Des • 19.00"
+ * - Multi-hari, bulan sama  : "20 - 27 Des"
+ * - Multi-hari, bulan beda  : "20 Des - 3 Jan"
+ */
+fun formatScheduleShort(startsAt: Instant, endsAt: Instant, zone: TimeZone = TimeZone.currentSystemDefault()): String {
+    val start = startsAt.toLocalDateTime(zone)
+    val end   = endsAt.toLocalDateTime(zone)
+    val startMonthStr = MONTHS_SHORT.getOrElse(start.monthNumber - 1) { "" }
+    val endMonthStr   = MONTHS_SHORT.getOrElse(end.monthNumber - 1) { "" }
+
+    return if (start.date == end.date) {
+        // Satu hari — tampilkan tanggal + jam mulai
+        "${start.dayOfMonth} $startMonthStr • %02d.%02d".format(start.hour, start.minute)
+    } else if (start.month == end.month && start.year == end.year) {
+        // Multi-hari, bulan sama
+        "${start.dayOfMonth} - ${end.dayOfMonth} $startMonthStr ${start.year}"
+    } else {
+        // Multi-hari, bulan atau tahun beda
+        "${start.dayOfMonth} $startMonthStr - ${end.dayOfMonth} $endMonthStr"
     }
 }

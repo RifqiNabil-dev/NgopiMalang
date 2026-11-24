@@ -121,7 +121,8 @@ fun HomeScreen(
                             onClick = onOpenEventPromo,
                             showStatus = false,
                             showDescription = false,
-                            showSchedule = false
+                            showSchedule = true,
+                            useShortSchedule = true
                         )
                     }
                 }
