@@ -4,34 +4,27 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DirectoryViewModelTest {
-    @Test fun searchMatchesNameAndAddressIgnoringCaseAndOuterSpaces() {
-        val model = DirectoryViewModel()
-        model.onSearchChange(" SAE ")
-        assertEquals(listOf("c1"), model.uiState.value.cafes.map { it.id })
-        model.onSearchChange(" SEMARANG ")
-        assertEquals(listOf("c3"), model.uiState.value.cafes.map { it.id })
+    @Test fun validationRejectsInvalidPricesAndBlankName() {
+        val errors = validateCafeForm(CafeFormState(name = " ", min = "30000", max = "20000", plugs = "-1"))
+        assertTrue("name" in errors); assertTrue("max" in errors); assertTrue("plugs" in errors)
     }
-
-    @Test fun filtersCombineWithSearchAndResetRestoresAllCafes() {
-        val model = DirectoryViewModel()
-        model.onSearchChange("Ruang")
-        model.togglePlugs()
-        assertEquals(listOf("c3"), model.uiState.value.cafes.map { it.id })
-        model.toggleWifi()
-        assertTrue(model.uiState.value.cafes.isEmpty())
-        model.resetFilters()
-        assertEquals(com.ngopimalang.app.core.data.DummyData.cafes.size, model.uiState.value.cafes.size)
-        assertEquals("", model.uiState.value.query)
-        assertFalse(model.uiState.value.wifiOnly)
-        assertFalse(model.uiState.value.plugsOnly)
+    @Test fun optionalPricesStayNullAndNoReviewStaysNull() {
+        val row = CafeRow(id = "id", name = "Cafe")
+        val cafe = CafeMapper.toModel(row)
+        assertNull(cafe.priceMin); assertNull(cafe.priceMax); assertNull(cafe.rating)
+        assertEquals("Harga belum tersedia", priceLabel(null, null))
     }
-
-    @Test fun detailsAreIndependentOfActiveSearchAndHandleUnknownIds() {
-        val model = DirectoryViewModel()
-        model.onSearchChange("tidak ditemukan")
-        assertTrue(model.uiState.value.cafes.isEmpty())
-        assertEquals("Kopi Sae Malang", model.findCafe("c1")?.name)
-        assertNull(model.findCafe("unknown"))
-        assertNull(model.findCafe(null))
+    @Test fun partialPriceHasNoDanglingSeparator() {
+        assertFalse(priceLabel(15000, null).endsWith("–"))
+        assertTrue(priceLabel(null, 20000).startsWith("Hingga"))
+    }
+    @Test fun writePayloadPreservesNullablePricesAndRequiredTextColumns() {
+        val write = CafeMapper.toWrite(CafeDraft(name = " Kopi "))
+        assertEquals("Kopi", write.name); assertNull(write.priceMin); assertNull(write.priceMax)
+        assertEquals("", write.address); assertEquals("", write.description); assertEquals("", write.openHours)
+    }
+    @Test fun validationAcceptsOptionalPricesButRejectsOverflow() {
+        assertTrue(validateCafeForm(CafeFormState(name = "Kopi", loading = false)).isEmpty())
+        assertTrue("min" in validateCafeForm(CafeFormState(name = "Kopi", min = "99999999999999")))
     }
 }

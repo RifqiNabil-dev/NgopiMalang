@@ -1,37 +1,7 @@
-# features/directory — Direktori Cafe
+# Direktori Cafe — Ossa Amelia Zuhra Lubis
 
-**Pemilik:** Ossa Amelia Zuhra Lubis (245150600111022)
+Proyek utama: D:\NgopiMalang, branch direktori-cafe-ossa. Progress 2 memakai Supabase Cloud, MVVM/StateFlow, tambah/edit khusus admin, foto Storage, arsip, dan hapus. Daftar memakai cafes_with_rating; detail menerima UUID Cloud melalui navigasi bertipe maupun adapter jalur lama.
 
-Implementasi Progress 1: `DirectoryScreen` (LazyVerticalGrid 2 kolom) → `DirectoryDetailScreen`, dengan `DirectoryViewModel` (StateFlow).
+ReviewSection dan ReviewSectionViewModel dari branch shel-branch sudah terhubung ke detail bersama. Rating hero mengikuti agregat database setelah ulasan disimpan/dihapus. Pengguna biasa dapat menulis/mengedit/menghapus ulasannya; admin memoderasi. Role diambil dari user_roles. Ulasan contoh tidak ditambahkan ketika database kosong.
 
-- Pencarian nama/alamat, tanpa membedakan kapital dan spasi luar.
-- Filter Wi-Fi dan colokan bisa digabung dengan pencarian.
-- Jumlah hasil, pesan hasil kosong, tombol reset, dan penanganan ID detail tidak valid.
-- Menggunakan CafeCard dan tema bersama; data contoh hanya diakses ViewModel.
-- Route detail: `directory/cafe/{cafeId}`. Navigasi disambungkan di AppNavHost.
-
-## Pengujian manual
-
-1. Login contoh, buka Direktori: enam cafe dalam dua kolom.
-2. Cari `SAE`, lalu ` semarang `: hasil Kopi Sae dan Ruang Seduh.
-3. Aktifkan Wi-Fi: Ruang Seduh dan Teras Kopi Dago tidak tampil.
-4. Gabungkan pencarian dan filter; kata kunci tidak cocok menampilkan pesan dan reset.
-5. Buka detail lalu kembali: pencarian dan filter tetap aktif.
-6. Periksa mode gelap dan ukuran huruf besar.
-
-## Pekerjaan versi akhir
-
-CafeFormScreen, CRUD Supabase dan unggah/hapus foto belum dibuat. Data belum persisten.
-Foto masih placeholder bawaan CafeCard; model bersama belum punya URL foto atau kualitas Wi-Fi.
-Integrasi perlu skema cafes, hak akses pengguna, Storage bucket, konfigurasi Supabase,
-dan kesepakatan perubahan model bersama dengan tim. Jangan menyimpan service-role key di aplikasi.
-
-Branch lokal: `codex/direktori-cafe-ossa`, belum di-push.
-
-- Model bersama: `com.ngopimalang.app.core.model.Cafe`
-- Dummy data sementara: `com.ngopimalang.app.core.data.DummyData.cafes`
-- Route: `NavRoutes.DIRECTORY` (ganti placeholder di `AppNavHost`)
-
----
-
-📖 **Panduan lengkap:** [`docs/04-directory.md`](../../../../../../assets/docs/04-directory.md)
+Home memakai cafe dan ulasan Cloud. BookmarkAction tetap menjadi slot integrasi milik anggota terkait. Model Cafe mempertahankan properti kompatibilitas bagi modul Progress 1. Lihat PROGRESS2.md untuk hasil pengujian dan batas cakupan.

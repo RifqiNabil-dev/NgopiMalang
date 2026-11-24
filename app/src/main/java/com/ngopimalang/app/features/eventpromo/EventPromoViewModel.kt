@@ -1,85 +1,92 @@
 package com.ngopimalang.app.features.eventpromo
 
 import androidx.lifecycle.ViewModel
-import com.ngopimalang.app.core.data.DummyData
+import androidx.lifecycle.viewModelScope
+import com.ngopimalang.app.core.data.toUserMessage
 import com.ngopimalang.app.core.model.EventCategory
 import com.ngopimalang.app.core.model.EventPromo
+import com.ngopimalang.app.core.model.EventStatus
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class EventPromoUiState(
-    val allEvents: List<EventPromo> = emptyList(),
-    val filteredEvents: List<EventPromo> = emptyList(),
-    val selectedCategory: EventCategory? = null
-)
+    val events: List<EventPromo> = emptyList(),
+    val query: String = "",
+    val selectedCategory: EventCategory? = null,
+    val onlyUpcoming: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val isAdmin: Boolean = false
+) {
+
+    val visibleEvents: List<EventPromo>
+        get() {
+            val keyword = query.trim()
+            return events.filter { event ->
+                (selectedCategory == null || event.category == selectedCategory) &&
+                    (!onlyUpcoming || event.status != EventStatus.FINISHED) &&
+                    (keyword.isEmpty() ||
+                        event.title.contains(keyword, true) ||
+                        event.cafeName.contains(keyword, true) ||
+                        event.description.contains(keyword, true))
+            }
+        }
+
+    val isEmpty: Boolean get() = !isLoading && visibleEvents.isEmpty()
+}
 
 /**
- * ViewModel untuk fitur Event & Promo Cafe.
- * Mengelola daftar event/promo dan filter kategori.
- * Progress 1: data disimpan di memory (mutableList), Progress 2 akan diganti Supabase.
+ * Daftar Event & Promo. Data dari Supabase lewat repository; layar tidak pernah
+ * memegang data.
  */
-class EventPromoViewModel : ViewModel() {
+class EventPromoViewModel(
+    private val repo: EventPromoRepository = EventPromoRepository()
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(EventPromoUiState())
+    private val _uiState = MutableStateFlow(EventPromoUiState(isLoading = true))
     val uiState: StateFlow<EventPromoUiState> = _uiState.asStateFlow()
 
-    // Temporary storage untuk Progress 1 (diganti Supabase di Progress 2)
-    private val eventStorage = DummyData.events.toMutableList()
-
-    init {
-        loadEvents()
+    fun setAdmin(isAdmin: Boolean) {
+        _uiState.update { it.copy(isAdmin = isAdmin) }
     }
 
-    private fun loadEvents() {
-        _uiState.update {
-            it.copy(
-                allEvents = eventStorage,
-                filteredEvents = applyFilter(eventStorage, it.selectedCategory)
-            )
-        }
+    /** Dipanggil sekali saat layar dibuka; ulangi hanya setelah simpan/hapus. */
+    fun ensureLoaded() {
+        if (_uiState.value.events.isEmpty() && !_uiState.value.isLoading) load()
     }
+
+    fun onQueryChange(text: String) = _uiState.update { it.copy(query = text) }
 
     fun onCategorySelected(category: EventCategory?) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                selectedCategory = category,
-                filteredEvents = applyFilter(currentState.allEvents, category)
-            )
+        _uiState.update { it.copy(selectedCategory = category) }
+        // Kategori masuk query repository, bukan hanya filter di layar.
+        load()
+    }
+
+    fun onOnlyUpcomingChange(enabled: Boolean) =
+        _uiState.update { it.copy(onlyUpcoming = enabled) }
+
+    fun load() {
+        val category = _uiState.value.selectedCategory
+        val isAdmin = _uiState.value.isAdmin
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = it.events.isEmpty(), errorMessage = null) }
+            try {
+                val events = repo.observeEvents(category, isAdmin)
+                _uiState.update { it.copy(events = events, isLoading = false) }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.toUserMessage()) }
+            }
         }
     }
 
-    private fun applyFilter(events: List<EventPromo>, category: EventCategory?): List<EventPromo> {
-        return if (category == null) {
-            events
-        } else {
-            events.filter { it.category == category }
-        }
-    }
+    fun onRetry() = load()
 
-    fun getEventById(eventId: String): EventPromo? {
-        return _uiState.value.allEvents.find { it.id == eventId }
-    }
-
-    fun addEvent(event: EventPromo) {
-        // TODO Progress 2: ganti dengan Supabase insert
-        eventStorage.add(event)
-        loadEvents()
-    }
-
-    fun updateEvent(event: EventPromo) {
-        // TODO Progress 2: ganti dengan Supabase update
-        val index = eventStorage.indexOfFirst { it.id == event.id }
-        if (index != -1) {
-            eventStorage[index] = event
-            loadEvents()
-        }
-    }
-
-    fun deleteEvent(eventId: String) {
-        // TODO Progress 2: ganti dengan Supabase delete
-        eventStorage.removeAll { it.id == eventId }
-        loadEvents()
-    }
+    fun getEventById(eventId: String): EventPromo? =
+        _uiState.value.events.firstOrNull { it.id == eventId }
 }

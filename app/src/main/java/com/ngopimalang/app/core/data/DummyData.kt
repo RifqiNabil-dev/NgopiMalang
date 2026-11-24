@@ -6,6 +6,7 @@ import com.ngopimalang.app.core.model.EventCategory
 import com.ngopimalang.app.core.model.EventPromo
 import com.ngopimalang.app.core.model.Review
 import com.ngopimalang.app.core.model.Vibe
+import kotlinx.datetime.Instant
 
 /**
  * Data dummy Progress 1 (UI belum terintegrasi Supabase).
@@ -14,13 +15,13 @@ import com.ngopimalang.app.core.model.Vibe
 object DummyData {
 
     val vibes = listOf(
-        Vibe("v1", "Nugas / WFC", "Tenang, banyak colokan, cocok buat kerja & kuliah", 16),
-        Vibe("v2", "Aesthetic", "Interior instagramable dan pencahayaan hangat", 12),
-        Vibe("v3", "24 Jam", "Buka sepanjang malam untuk begadang & nugas", 6),
-        Vibe("v4", "Outdoor", "Area terbuka dengan taman dan udara segar khas Malang", 9),
-        Vibe("v5", "Vintage / Retro", "Nuansa nostalgia dengan dekorasi klasik dan musik santai", 5),
-        Vibe("v6", "Rooftop & View", "Pemandangan citylight dan pegunungan dari ketinggian", 4),
-        Vibe("v7", "Minimalist Modern", "Desain bersih, tenang, dan pencahayaan alami", 8)
+        Vibe("v1", "Nugas / WFC", "Tenang, banyak colokan, cocok buat kerja & kuliah", cafeCount = 16),
+        Vibe("v2", "Aesthetic", "Interior instagramable dan pencahayaan hangat", cafeCount = 12),
+        Vibe("v3", "24 Jam", "Buka sepanjang malam untuk begadang & nugas", cafeCount = 6),
+        Vibe("v4", "Outdoor", "Area terbuka dengan taman dan udara segar khas Malang", cafeCount = 9),
+        Vibe("v5", "Vintage / Retro", "Nuansa nostalgia dengan dekorasi klasik dan musik santai", cafeCount = 5),
+        Vibe("v6", "Rooftop & View", "Pemandangan citylight dan pegunungan dari ketinggian", cafeCount = 4),
+        Vibe("v7", "Minimalist Modern", "Desain bersih, tenang, dan pencahayaan alami", cafeCount = 8)
     )
 
     val cafes = listOf(
@@ -164,7 +165,8 @@ object DummyData {
             title = "Live Acoustic Night",
             cafeName = "Bara Coffee House",
             category = EventCategory.EVENT,
-            schedule = "Sab, 21 Des 2025 • 19.00 WIB",
+            startsAt = Instant.parse("2026-12-21T12:00:00Z"),
+            endsAt = Instant.parse("2026-12-21T15:00:00Z"),
             description = "Penampilan akustik tiga musisi lokal Malang. Gratis untuk semua pengunjung."
         ),
         EventPromo(
@@ -172,7 +174,8 @@ object DummyData {
             title = "Diskon 30% Semua Manual Brew",
             cafeName = "Ruang Seduh",
             category = EventCategory.PROMO,
-            schedule = "Setiap hari • 14.00 - 17.00 WIB",
+            startsAt = Instant.parse("2026-12-01T07:00:00Z"),
+            endsAt = Instant.parse("2026-12-31T10:00:00Z"),
             description = "Nikmati potongan harga untuk seluruh menu manual brew di jam santai."
         ),
         EventPromo(
@@ -180,7 +183,8 @@ object DummyData {
             title = "Pameran Foto Kopi Nusantara",
             cafeName = "Kopi Sae Malang",
             category = EventCategory.EVENT,
-            schedule = "20 - 27 Des 2025 • 10.00 - 21.00 WIB",
+            startsAt = Instant.parse("2026-12-20T03:00:00Z"),
+            endsAt = Instant.parse("2026-12-27T14:00:00Z"),
             description = "Pameran mini 24 karya fotografi tentang perjalanan kopi dari petani ke cangkir."
         ),
         EventPromo(
@@ -188,7 +192,8 @@ object DummyData {
             title = "Beli 1 Gratis 1 Kopi Susu",
             cafeName = "Ngopi Bareng 24",
             category = EventCategory.PROMO,
-            schedule = "Min - Kam • 22.00 - 02.00 WIB",
+            startsAt = Instant.parse("2026-12-15T15:00:00Z"),
+            endsAt = Instant.parse("2026-12-15T19:00:00Z"),
             description = "Promo begadang: setiap pembelian kopi susu mendapat satu gelas gratis."
         ),
         EventPromo(
@@ -196,7 +201,8 @@ object DummyData {
             title = "Barista Workshop: Latte Art 101",
             cafeName = "Latar Ijen Roastery",
             category = EventCategory.EVENT,
-            schedule = "Ming, 28 Des 2025 • 10.00 WIB",
+            startsAt = Instant.parse("2026-12-28T03:00:00Z"),
+            endsAt = Instant.parse("2026-12-28T07:00:00Z"),
             description = "Pelajari teknik frothing susu dan pouring latte art bersama Champion Barista Malang."
         ),
         EventPromo(
@@ -204,7 +210,8 @@ object DummyData {
             title = "Diskon Student 20% Pakai KTM",
             cafeName = "Lapan Puluh Coffee",
             category = EventCategory.PROMO,
-            schedule = "Setiap Hari • 08.00 - 16.00 WIB",
+            startsAt = Instant.parse("2026-12-01T01:00:00Z"),
+            endsAt = Instant.parse("2026-12-31T09:00:00Z"),
             description = "Tunjukkan KTM UB/UM/UMM aktif untuk menikmati potongan 20% pada semua menu."
         ),
         EventPromo(
@@ -212,7 +219,8 @@ object DummyData {
             title = "Sunset Chill Beats & Coffee",
             cafeName = "Senja Coffee & View",
             category = EventCategory.EVENT,
-            schedule = "Jum, 26 Des 2025 • 16.30 WIB",
+            startsAt = Instant.parse("2026-12-26T09:30:00Z"),
+            endsAt = Instant.parse("2026-12-26T12:00:00Z"),
             description = "Sesi ngopi sore menikmati sunset dengan live DJ set santai khas pegunungan Malang."
         ),
         EventPromo(
@@ -220,7 +228,8 @@ object DummyData {
             title = "Buy 1 Get 1 Pastry Choice",
             cafeName = "Griya Coffee & Bites",
             category = EventCategory.PROMO,
-            schedule = "Sab - Ming • 08.00 - 11.00 WIB",
+            startsAt = Instant.parse("2026-12-20T01:00:00Z"),
+            endsAt = Instant.parse("2026-12-20T04:00:00Z"),
             description = "Beli 1 croissant atau pastry manis gratis 1 pastry segar pilihan hari ini."
         )
     )
@@ -228,75 +237,91 @@ object DummyData {
     val reviews = listOf(
         Review(
             id = "r1",
+            userId = "u1",
+            cafeId = "c5",
             userName = "Dinda Ayu",
             cafeName = "Bara Coffee House",
             rating = 5,
             comment = "Tempatnya tenang, colokan banyak, dan kopinya konsisten enak. Cocok banget buat ngerjain tugas.",
             favoriteMenu = "Es Kopi Susu Gula Aren",
-            dateLabel = "2 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 2L * 86_400_000L)
         ),
         Review(
             id = "r2",
+            userId = "u2",
+            cafeId = "c2",
             userName = "Bagas Pratama",
             cafeName = "Kedai Tepi Sawah",
             rating = 4,
             comment = "View sawahnya bikin betah. Agak ramai saat sore, tapi pelayanan cepat.",
             favoriteMenu = "Kopi Tubruk",
-            dateLabel = "5 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 5L * 86_400_000L)
         ),
         Review(
             id = "r3",
+            userId = "u3",
+            cafeId = "c3",
             userName = "Sari Wulandari",
             cafeName = "Ruang Seduh",
             rating = 5,
             comment = "Baristanya ramah dan mau menjelaskan karakter tiap biji kopi. Wajib coba manual brew-nya.",
             favoriteMenu = "V60 Gayo",
-            dateLabel = "1 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 7L * 86_400_000L)
         ),
         Review(
             id = "r4",
+            userId = "u4",
+            cafeId = "c11",
             userName = "Fajar Hidayat",
             cafeName = "Kopi Studio 24 Suhat",
             rating = 5,
             comment = "Tempat andalan buat ngerjain skripsi malam-malam. WiFi kenceng banget dan colokan aman.",
             favoriteMenu = "Es Kopi Aren 24",
-            dateLabel = "3 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 3L * 86_400_000L)
         ),
         Review(
             id = "r5",
+            userId = "u5",
+            cafeId = "c10",
             userName = "Nabila Putri",
             cafeName = "Senja Coffee & View",
             rating = 5,
             comment = "Gak pernah bosan ke sini! Pemandangan sore pas sunset keren banget, adem dan romantis.",
             favoriteMenu = "Matcha Cream Latte",
-            dateLabel = "4 hari lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 4L * 86_400_000L)
         ),
         Review(
             id = "r6",
+            userId = "u6",
+            cafeId = "c7",
             userName = "Rizky Ramadhan",
             cafeName = "Latar Ijen Roastery",
             rating = 5,
             comment = "Coffee shop paling estetis di Malang saat ini. Espresso blend-nya acid-nya pas dan wangi.",
             favoriteMenu = "Piccolo Latte",
-            dateLabel = "1 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 7L * 86_400_000L)
         ),
         Review(
             id = "r7",
+            userId = "u7",
+            cafeId = "c9",
             userName = "Maya Indah",
             cafeName = "Oemah Heretan Vintage",
             rating = 4,
             comment = "Suasananya sangat homey kayak rumah nenek. Pisang goreng kayumanisnya enak parah!",
             favoriteMenu = "Kopi Tubruk Rempah",
-            dateLabel = "2 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 14L * 86_400_000L)
         ),
         Review(
             id = "r8",
+            userId = "u8",
+            cafeId = "c8",
             userName = "Andi Wijaya",
             cafeName = "Lapan Puluh Coffee",
             rating = 4,
             comment = "Lokasi strategis dekat kampus UB & UMM. Tempat luas dan harga mahasiswa.",
             favoriteMenu = "Es Kopi Susu Kampus",
-            dateLabel = "2 minggu lalu"
+            createdAt = Instant.fromEpochMilliseconds(System.currentTimeMillis() - 14L * 86_400_000L)
         )
     )
 }

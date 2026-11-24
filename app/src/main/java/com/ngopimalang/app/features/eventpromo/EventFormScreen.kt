@@ -7,55 +7,70 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ngopimalang.app.core.model.EventCategory
-import com.ngopimalang.app.core.model.EventPromo
 
+/**
+ * Form tambah/edit event. Seluruh input ada di [EventFormViewModel] sehingga rotasi
+ * layar tidak menghapus isian (state hoisting).
+ * Tombol Hapus hanya muncul di mode edit untuk admin.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventFormScreen(
     eventId: String?,
     onNavigateBack: () -> Unit,
+    onSaved: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: EventPromoViewModel = viewModel()
+    isAdmin: Boolean = false,
+    viewModel: EventFormViewModel = viewModel()
 ) {
-    val isEditMode = eventId != null
-    val existingEvent = if (isEditMode) viewModel.getEventById(eventId!!) else null
+    val state by viewModel.formState.collectAsStateWithLifecycle()
 
-    var title by remember { mutableStateOf(existingEvent?.title ?: "") }
-    var cafeName by remember { mutableStateOf(existingEvent?.cafeName ?: "") }
-    var category by remember { mutableStateOf(existingEvent?.category ?: EventCategory.EVENT) }
-    var schedule by remember { mutableStateOf(existingEvent?.schedule ?: "") }
-    var description by remember { mutableStateOf(existingEvent?.description ?: "") }
-    var errorMessage by remember { mutableStateOf("") }
+    LaunchedEffect(eventId) { viewModel.loadForEdit(eventId) }
+
+    LaunchedEffect(state.done) {
+        if (state.done) onSaved()
+    }
+
+    var cafeMenuExpanded by remember { mutableStateOf(false) }
+    var deleteDialogVisible by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditMode) "Edit Event" else "Tambah Event") },
+                title = { Text(if (state.isEditing) "Edit Event" else "Tambah Event") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
@@ -76,170 +91,229 @@ fun EventFormScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Judul
             OutlinedTextField(
-                value = title,
-                onValueChange = {
-                    title = it
-                    errorMessage = ""
-                },
+                value = state.title,
+                onValueChange = viewModel::onTitleChange,
                 label = { Text("Judul Event/Promo") },
                 placeholder = { Text("Contoh: Live Acoustic Night") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                isError = errorMessage.contains("judul", ignoreCase = true)
+                isError = state.validationErrors.containsKey("title"),
+                supportingText = {
+                    state.validationErrors["title"]?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
 
-            // Nama Cafe
-            OutlinedTextField(
-                value = cafeName,
-                onValueChange = {
-                    cafeName = it
-                    errorMessage = ""
-                },
-                label = { Text("Nama Cafe") },
-                placeholder = { Text("Contoh: Bara Coffee House") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = errorMessage.contains("cafe", ignoreCase = true)
-            )
-
-            // Kategori
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Kategori",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    FilterChip(
-                        selected = category == EventCategory.EVENT,
-                        onClick = { category = EventCategory.EVENT },
-                        label = {
-                            Text(
-                                text = EventCategory.EVENT.label,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        },
-                        shape = CircleShape,
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                Text(text = "Kategori", style = MaterialTheme.typography.bodyMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    EventCategory.entries.forEach { category ->
+                        FilterChip(
+                            selected = state.category == category,
+                            onClick = { viewModel.onCategoryChange(category) },
+                            label = { Text(category.label) }
                         )
-                    )
-                    FilterChip(
-                        selected = category == EventCategory.PROMO,
-                        onClick = { category = EventCategory.PROMO },
-                        label = {
-                            Text(
-                                text = EventCategory.PROMO.label,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        },
-                        shape = CircleShape,
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    )
+                    }
                 }
             }
 
-            // Jadwal
-            OutlinedTextField(
-                value = schedule,
-                onValueChange = {
-                    schedule = it
-                    errorMessage = ""
-                },
-                label = { Text("Jadwal") },
-                placeholder = { Text("Contoh: Sab, 21 Des 2025 • 19.00 WIB") },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = errorMessage.contains("jadwal", ignoreCase = true)
-            )
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = state.startDate,
+                    onValueChange = viewModel::onStartDateChange,
+                    label = { Text("Tanggal mulai") },
+                    placeholder = { Text("2026-01-01") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = state.startTime,
+                    onValueChange = viewModel::onStartTimeChange,
+                    label = { Text("Jam mulai") },
+                    placeholder = { Text("19:00") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+            }
 
-            // Deskripsi
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = state.endDate,
+                    onValueChange = viewModel::onEndDateChange,
+                    label = { Text("Tanggal selesai") },
+                    placeholder = { Text("2026-01-01") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = state.endTime,
+                    onValueChange = viewModel::onEndTimeChange,
+                    label = { Text("Jam selesai") },
+                    placeholder = { Text("22:00") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+            }
+
+            state.validationErrors["time"]?.let {
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Column {
+                OutlinedTextField(
+                    value = state.cafeName,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Cafe terkait (opsional)") },
+                    placeholder = { Text("Pilih cafe") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        TextButton(onClick = { cafeMenuExpanded = true }) { Text("Pilih") }
+                    }
+                )
+                DropdownMenu(
+                    expanded = cafeMenuExpanded,
+                    onDismissRequest = { cafeMenuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Tanpa cafe") },
+                        onClick = {
+                            viewModel.onCafeChange(null, "")
+                            cafeMenuExpanded = false
+                        }
+                    )
+                    state.availableCafes.forEach { cafe ->
+                        DropdownMenuItem(
+                            text = { Text(cafe.name) },
+                            onClick = {
+                                viewModel.onCafeChange(cafe.id, cafe.name)
+                                cafeMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = state.priceMinText,
+                    onValueChange = viewModel::onPriceMinChange,
+                    label = { Text("Harga minimum") },
+                    placeholder = { Text("15000") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = state.priceMaxText,
+                    onValueChange = viewModel::onPriceMaxChange,
+                    label = { Text("Harga maksimum") },
+                    placeholder = { Text("35000") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+            }
+            state.validationErrors["price"]?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
             OutlinedTextField(
-                value = description,
-                onValueChange = {
-                    description = it
-                    errorMessage = ""
-                },
+                value = state.description,
+                onValueChange = viewModel::onDescriptionChange,
                 label = { Text("Deskripsi") },
                 placeholder = { Text("Jelaskan detail acara atau promo") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 4,
                 maxLines = 8,
-                isError = errorMessage.contains("deskripsi", ignoreCase = true)
+                isError = state.validationErrors.containsKey("description"),
+                supportingText = {
+                    state.validationErrors["description"]?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
 
-            // Error message
-            if (errorMessage.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Terbitkan", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Jika mati, event hanya terlihat admin",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(checked = state.isPublished, onCheckedChange = viewModel::onPublishChange)
+            }
+
+            state.errorMessage?.let {
                 Text(
-                    text = errorMessage,
+                    text = it,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 4.dp)
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 
-            // Tombol Simpan
             Button(
-                onClick = {
-                    val validation = validateForm(title, cafeName, schedule, description)
-                    if (validation != null) {
-                        errorMessage = validation
-                        return@Button
-                    }
-
-                    val event = EventPromo(
-                        id = eventId ?: generateEventId(),
-                        title = title.trim(),
-                        cafeName = cafeName.trim(),
-                        category = category,
-                        schedule = schedule.trim(),
-                        description = description.trim()
-                    )
-
-                    if (isEditMode) {
-                        viewModel.updateEvent(event)
-                    } else {
-                        viewModel.addEvent(event)
-                    }
-
-                    onNavigateBack()
-                },
+                onClick = viewModel::onSave,
+                enabled = !state.isSaving,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isEditMode) "Simpan Perubahan" else "Tambah Event")
+                Text(
+                    if (state.isSaving) "Menyimpan..."
+                    else if (state.isEditing) "Simpan Perubahan" else "Tambah Event"
+                )
+            }
+
+            if (isAdmin && state.isEditing) {
+                TextButton(
+                    onClick = { deleteDialogVisible = true },
+                    enabled = !state.isSaving,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Text(
+                        text = "Hapus Event",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
     }
-}
 
-private fun validateForm(
-    title: String,
-    cafeName: String,
-    schedule: String,
-    description: String
-): String? {
-    return when {
-        title.isBlank() -> "Judul event wajib diisi"
-        cafeName.isBlank() -> "Nama cafe wajib diisi"
-        schedule.isBlank() -> "Jadwal wajib diisi"
-        description.isBlank() -> "Deskripsi wajib diisi"
-        else -> null
+    if (deleteDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { deleteDialogVisible = false },
+            title = { Text("Hapus Event") },
+            text = { Text("Event ini akan dihapus permanen.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteDialogVisible = false
+                    viewModel.onDelete()
+                }) { Text("Hapus", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteDialogVisible = false }) { Text("Batal") }
+            }
+        )
     }
-}
-
-private fun generateEventId(): String {
-    return "e${System.currentTimeMillis()}"
 }

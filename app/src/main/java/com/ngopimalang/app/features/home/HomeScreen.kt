@@ -1,7 +1,5 @@
 package com.ngopimalang.app.features.home
 
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,9 +27,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.ngopimalang.app.core.components.CafeCard
 import com.ngopimalang.app.core.components.EventCard
@@ -47,13 +49,16 @@ fun HomeScreen(
     onOpenEventPromo: () -> Unit,
     onOpenReviews: () -> Unit,
     onOpenBookmark: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    cafeState: HomeCafeState = HomeCafeState(loading = false),
+    onCafeClick: (String) -> Unit = { onOpenDirectory() },
+    onRetryCafes: () -> Unit = {}
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         GradientBackdrop(height = 220.dp)
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag("home_feed"),
             contentPadding = PaddingValues(top = 24.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -97,11 +102,27 @@ fun HomeScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(items = DummyData.events, key = { it.id }) { event ->
+                    if (cafeState.eventsLoading) {
+                        item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) }
+                    }
+                    cafeState.eventsError?.let {
+                        item {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                        }
+                    }
+                    items(items = cafeState.events, key = { it.id }) { event ->
                         EventCard(
                             event = event,
                             modifier = Modifier.width(260.dp),
-                            onClick = onOpenEventPromo
+                            onClick = onOpenEventPromo,
+                            showStatus = false,
+                            showDescription = false,
+                            showSchedule = true,
+                            useShortSchedule = true
                         )
                     }
                 }
@@ -115,15 +136,28 @@ fun HomeScreen(
                 )
             }
             item {
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    if (cafeState.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    cafeState.error?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                        TextButton(onClick = onRetryCafes) { Text("Coba lagi rekomendasi cafe") }
+                    }
+                    if (!cafeState.loading && cafeState.error == null && cafeState.cafes.isEmpty()) {
+                        Text("Belum ada cafe untuk ditampilkan.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            item {
                 LazyRow(
+                    modifier = Modifier.testTag("home_cafes"),
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(items = DummyData.cafes, key = { it.id }) { cafe ->
+                    items(items = cafeState.cafes, key = { it.id }) { cafe ->
                         CafeCard(
                             cafe = cafe,
                             modifier = Modifier.width(200.dp),
-                            onClick = onOpenDirectory
+                            onClick = { onCafeClick(cafe.id) }
                         )
                     }
                 }
@@ -137,14 +171,29 @@ fun HomeScreen(
                 )
             }
             item {
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    if (cafeState.reviewsLoading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    cafeState.reviewsError?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                        TextButton(onClick = onRetryCafes) { Text("Coba lagi ulasan") }
+                    }
+                    if (!cafeState.reviewsLoading && cafeState.reviewsError == null && cafeState.reviews.isEmpty()) {
+                        Text("Belum ada ulasan terbaru.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            item {
                 LazyRow(
+                    modifier = Modifier.testTag("home_reviews"),
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(items = DummyData.reviews, key = { it.id }) { review ->
+                    items(items = cafeState.reviews, key = { it.id }) { review ->
                         ReviewCard(
                             review = review,
-                            modifier = Modifier.width(280.dp),
+                            modifier = Modifier
+                                .width(280.dp)
+                                .height(195.dp),
                             onClick = onOpenReviews
                         )
                     }
