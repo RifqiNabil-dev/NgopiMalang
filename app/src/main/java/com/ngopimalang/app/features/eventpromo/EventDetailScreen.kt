@@ -3,7 +3,9 @@ package com.ngopimalang.app.features.eventpromo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -103,7 +105,8 @@ fun EventDetailScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                windowInsets = WindowInsets(0)
             )
         },
         modifier = modifier
@@ -218,23 +221,29 @@ private fun EventDetailContent(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            InfoRow(label = "Jadwal", value = event.schedule)
+            InfoRow(
+                label = "Jadwal",
+                value = event.schedule,
+                valueStyle = MaterialTheme.typography.titleMedium
+            )
             if (event.priceMin != null || event.priceMax != null) {
                 InfoRow(label = "Harga", value = priceLabel(event.priceMin, event.priceMax))
             }
             if (event.cafeName.isNotBlank()) {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
                         text = "Cafe",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (event.cafeId != null) {
-                        TextButton(onClick = { onNavigateToCafe(event.cafeId) }) {
+                        TextButton(
+                            onClick = { onNavigateToCafe(event.cafeId) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
                             Icon(
                                 Icons.Default.LocationOn,
                                 contentDescription = null,
@@ -328,7 +337,11 @@ private fun StatusBadge(status: EventStatus) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(
+    label: String,
+    value: String,
+    valueStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -340,7 +353,7 @@ private fun InfoRow(label: String, value: String) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = valueStyle,
             color = MaterialTheme.colorScheme.onSurface
         )
     }
