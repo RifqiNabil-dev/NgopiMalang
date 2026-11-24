@@ -223,8 +223,7 @@ private fun EventDetailContent(
         ) {
             InfoRow(
                 label = "Jadwal",
-                value = event.schedule,
-                valueStyle = MaterialTheme.typography.titleMedium
+                value = event.schedule
             )
             if (event.priceMin != null || event.priceMax != null) {
                 InfoRow(label = "Harga", value = priceLabel(event.priceMin, event.priceMax))
@@ -236,7 +235,7 @@ private fun EventDetailContent(
                 ) {
                     Text(
                         text = "Cafe",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (event.cafeId != null) {
@@ -340,7 +339,8 @@ private fun StatusBadge(status: EventStatus) {
 private fun InfoRow(
     label: String,
     value: String,
-    valueStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium
+    valueStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
+    labelStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -348,7 +348,7 @@ private fun InfoRow(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = labelStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
