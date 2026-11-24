@@ -24,15 +24,18 @@ import com.ngopimalang.app.core.model.EventStatus
 /**
  * Kartu event/promo. Pemilik fitur: Rifqi (features.eventpromo).
  *
- * Badge status hanya ditampilkan bila [showStatus] true, supaya dipakai di daftar
- * dengan tinggi kartu yang sama seperti sebelumnya.
+ * [showStatus]      — tampilkan badge status (UPCOMING/ONGOING/FINISHED). Default true (di daftar event).
+ * [showDescription] — tampilkan cuplikan deskripsi. Default true; set false di beranda agar card lebih ringkas.
+ * [showSchedule]    — tampilkan baris jadwal. Default true; set false di beranda agar tidak berdempetan.
  */
 @Composable
 fun EventCard(
     event: EventPromo,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
-    showStatus: Boolean = true
+    showStatus: Boolean = true,
+    showDescription: Boolean = true,
+    showSchedule: Boolean = true
 ) {
     Card(
         onClick = onClick,
@@ -45,11 +48,12 @@ fun EventCard(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            // Baris atas: badge kategori (kiri) + jadwal singkat (kanan) — jadwal hanya jika showSchedule
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = if (showSchedule) Arrangement.SpaceBetween else Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
@@ -71,13 +75,16 @@ fun EventCard(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-                Text(
-                    text = event.schedule,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (showSchedule) {
+                    Text(
+                        text = event.schedule,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
             Text(
                 text = event.title,
@@ -89,20 +96,24 @@ fun EventCard(
             if (showStatus) {
                 StatusPill(event.status)
             }
-            Text(
-                text = event.cafeName,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = event.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (event.cafeName.isNotBlank()) {
+                Text(
+                    text = event.cafeName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (showDescription && event.description.isNotBlank()) {
+                Text(
+                    text = event.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

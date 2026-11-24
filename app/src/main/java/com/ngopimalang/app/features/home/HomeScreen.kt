@@ -119,7 +119,9 @@ fun HomeScreen(
                             event = event,
                             modifier = Modifier.width(260.dp),
                             onClick = onOpenEventPromo,
-                            showStatus = false
+                            showStatus = false,
+                            showDescription = false,
+                            showSchedule = false
                         )
                     }
                 }
