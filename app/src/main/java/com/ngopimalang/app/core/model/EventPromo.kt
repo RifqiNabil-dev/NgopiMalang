@@ -19,7 +19,7 @@ enum class EventCategory(val label: String) {
 }
 
 /**
- * Status dihitung dari waktu, bukan disimpan (dok 09 bagian 5.4).
+ * Status dihitung dari waktu.
  */
 enum class EventStatus(val label: String) {
     UPCOMING("Akan datang"),
@@ -36,7 +36,7 @@ enum class EventStatus(val label: String) {
 }
 
 /**
- * Model event & promo.(features.eventpromo).
+ * Model event & promo.
  */
 data class EventPromo(
     val id: String,
@@ -83,12 +83,6 @@ fun formatSchedule(startsAt: Instant, endsAt: Instant, zone: TimeZone = TimeZone
     }
 }
 
-/**
- * Format ringkas untuk card preview (maks ~20 karakter):
- * - Satu hari  : "21 Des • 19.00"
- * - Multi-hari, bulan sama  : "20 - 27 Des"
- * - Multi-hari, bulan beda  : "20 Des - 3 Jan"
- */
 fun formatScheduleShort(startsAt: Instant, endsAt: Instant, zone: TimeZone = TimeZone.currentSystemDefault()): String {
     val start = startsAt.toLocalDateTime(zone)
     val end   = endsAt.toLocalDateTime(zone)

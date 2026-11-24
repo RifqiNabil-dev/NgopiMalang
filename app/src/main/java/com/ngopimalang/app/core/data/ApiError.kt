@@ -4,7 +4,6 @@ package com.ngopimalang.app.core.data
  * Menerjemahkan error Supabase/Postgres menjadi kalimat yang bisa dibaca pengguna.
  *
  * Dipakai semua repository: `catch (e: Exception) { e.toUserMessage() }`.
- * Kode error database dijelaskan di dokumen 09 bagian 12.
  */
 fun Throwable.toUserMessage(): String {
     val raw = message.orEmpty()

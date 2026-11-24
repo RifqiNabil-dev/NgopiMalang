@@ -4,8 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Bentuk baris tabel `event_promos` (dok 09 bagian 6).
- * Nama kolom snake_case hanya boleh muncul di file ini dan di mapper.
+ * Bentuk baris tabel `event_promos.
  */
 @Serializable
 data class EventPromoRow(
@@ -28,10 +27,7 @@ data class EventCafeRow(
     val name: String? = null
 )
 
-/**
- * DTO tulis terpisah: id, created_by, dan timestamp tidak pernah dikirim dari aplikasi.
- * `cafe_id` nullable karena event boleh tidak terikat cafe.
- */
+
 @Serializable
 data class EventPromoWrite(
     @SerialName("cafe_id") val cafeId: String?,

@@ -53,7 +53,6 @@ import com.ngopimalang.app.features.directory.priceLabel
 /**
  * Detail satu event. Memuat datanya sendiri lewat [EventDetailViewModel], jadi
  * tetap benar walaupun dibuka tanpa membuka daftar lebih dulu.
- * Tombol Edit/Hapus hanya muncul untuk admin (dok 10 bagian 7.6).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

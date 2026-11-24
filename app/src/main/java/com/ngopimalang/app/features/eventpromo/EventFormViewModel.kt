@@ -37,7 +37,7 @@ data class EventFormUiState(
 
 /**
  * Form tambah/edit event. Memegang seluruh input supaya rotasi layar tidak
- * menghilangkan isian (state hoisting, dok 08 bagian 5).
+ * menghilangkan isian (state hoisting).
  */
 class EventFormViewModel(
     private val repo: EventPromoRepository = EventPromoRepository()

@@ -10,9 +10,8 @@ import io.github.jan.supabase.storage.Storage
 /**
  * Satu koneksi Supabase untuk seluruh aplikasi.
  *
- * URL dan anon key dibaca dari `local.properties` (tidak ikut git) lalu masuk
- * ke `BuildConfig`. Anon key memang dirancang publik; keamanan data dipegang
- * RLS di database, bukan dipegang kunci ini.
+ * URL dan anon key dibaca dari `local.properties` lalu masuk
+ * ke `BuildConfig`. Anon key memang dirancang publik.
  */
 object Supabase {
 

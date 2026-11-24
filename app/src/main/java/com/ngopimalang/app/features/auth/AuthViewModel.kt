@@ -117,6 +117,16 @@ class AuthViewModel(
         }
     }
 
+    /**
+     * Memperbarui nama profil pengguna dan state UI.
+     */
+    suspend fun updateDisplayName(newName: String) {
+        val trimmed = newName.trim()
+        require(trimmed.isNotBlank()) { "Nama tampilan tidak boleh kosong" }
+        repository.updateDisplayName(trimmed)
+        _uiState.update { it.copy(name = trimmed) }
+    }
+
     private fun restoreSession() {
         if (!Supabase.isConfigured) {
             _uiState.update { it.copy(isLoading = false) }

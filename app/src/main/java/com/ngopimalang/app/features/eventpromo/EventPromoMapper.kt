@@ -11,8 +11,6 @@ object EventPromoMapper {
     fun toModel(row: EventPromoRow): EventPromo {
         val start = runCatching { Instant.parse(row.startsAt) }.getOrNull()
         val end = runCatching { Instant.parse(row.endsAt) }.getOrNull()
-        // Bengkok bila database mengirim tanggal yang tidak valid: keduanya sama
-        // supaya [EventPromo] tetap terbentuk dan kartu tidak crash.
         val safeStart = start ?: Clock.System.now()
         val safeEnd = end ?: safeStart
         return EventPromo(

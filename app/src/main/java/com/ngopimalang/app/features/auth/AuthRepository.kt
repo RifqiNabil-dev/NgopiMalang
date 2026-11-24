@@ -17,11 +17,17 @@ data class UserProfile(
     @SerialName("avatar_path") val avatarPath: String? = null
 )
 
-/** Baris tabel `user_roles`. Role tidak disimpan di `profiles`. */
+/** Baris tabel `user_roles`.*/
 @Serializable
 data class UserRole(val role: String = "user")
 
-/** Data akun yang sudah siap dipakai layar: sesi + profil + role. */
+/** Payload update profil pengguna. */
+@Serializable
+data class ProfileUpdate(
+    @SerialName("display_name") val displayName: String
+)
+
+/** Data akun: sesi + profil + role. */
 data class Account(
     val id: String,
     val email: String,
@@ -32,10 +38,7 @@ data class Account(
 }
 
 /**
- * Satu pintu ke Supabase Auth dan tabel profil.
- *
- * ViewModel tidak pernah memanggil `client` langsung, jadi kalau alur auth
- * berubah, hanya file ini yang disentuh.
+ * Satu Supabase Auth dan tabel profil.
  */
 class AuthRepository {
 
@@ -64,9 +67,6 @@ class AuthRepository {
     /**
      * Mendaftar akun baru. Trigger `handle_new_user` di database yang membuat
      * baris `profiles` dan `user_roles`, jadi aplikasi tidak perlu INSERT manual.
-     *
-     * @return akun bila langsung mendapat sesi, atau null bila email masih
-     *         menunggu konfirmasi (fitur "Confirm email" aktif di Supabase).
      */
     suspend fun signUp(displayName: String, email: String, password: String): Account? {
         client.auth.signUpWith(Email) {
@@ -82,6 +82,17 @@ class AuthRepository {
 
     suspend fun signOut() {
         client.auth.signOut()
+    }
+
+    /**
+     * Memperbarui nama tampilan pengguna di tabel `profiles`.
+     */
+    suspend fun updateDisplayName(newName: String) {
+        val user = client.auth.currentUserOrNull()
+            ?: throw IllegalStateException("Belum login")
+        client.postgrest["profiles"].update(ProfileUpdate(newName)) {
+            filter { eq("id", user.id) }
+        }
     }
 
     private suspend fun accountFor(userId: String, email: String): Account {

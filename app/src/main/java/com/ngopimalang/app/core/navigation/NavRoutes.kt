@@ -2,7 +2,6 @@ package com.ngopimalang.app.core.navigation
 
 /**
  * Daftar route aplikasi. Satu route per fitur, dipetakan di [AppNavHost].
- * Anggota yang menambah screen baru cukup menambah const di sini lalu daftarkan composable-nya.
  */
 object NavRoutes {
     // Fondasi aplikasi

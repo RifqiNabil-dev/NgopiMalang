@@ -19,8 +19,7 @@ data class EventDetailUiState(
 )
 
 /**
- * Detail satu event. Memuat sendiri berdasarkan id, tidak mengandalkan daftar
- * layar pemanggil (dok 10 bagian 4 dan dok 09 bagian 11.1).
+ * Detail satu event.
  */
 class EventDetailViewModel(
     private val repo: EventPromoRepository = EventPromoRepository()

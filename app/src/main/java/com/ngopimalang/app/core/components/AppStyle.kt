@@ -39,10 +39,6 @@ import androidx.compose.ui.unit.sp
 
 /**
  * Gaya tampilan bersama seluruh layar NgopiMalang.
- *
- * Semua warna diambil dari [MaterialTheme.colorScheme] (Theme.kt), jadi otomatis ikut
- * mode gelap HP dan warna tema tim. Kalau mau mengubah tampilan aplikasi secara
- * menyeluruh, cukup ubah berkas ini — layar tidak perlu disentuh satu per satu.
  */
 
 /** Latar gradasi tipis di bagian atas layar. Dipakai di semua halaman. */
@@ -66,7 +62,6 @@ fun GradientBackdrop(
     )
 }
 
-/** Kotak putih membulat sebagai wadah isi layar. */
 @Composable
 fun AppCard(
     modifier: Modifier = Modifier,
@@ -91,7 +86,7 @@ fun AppCard(
     }
 }
 
-/** Label kecil huruf kapital di atas isi kartu, mis. "MASUK KE AKUN". */
+
 @Composable
 fun SectionLabel(
     text: String,
@@ -106,7 +101,7 @@ fun SectionLabel(
     )
 }
 
-/** Tombol utama: penuh lebar, ujung membulat, tinggi 56dp. */
+
 @Composable
 fun PillButton(
     text: String,
@@ -134,7 +129,7 @@ fun PillButton(
     }
 }
 
-/** Kolom isian dengan latar lembut dan tanpa garis bawah. */
+
 @Composable
 fun AppTextField(
     value: String,

@@ -33,7 +33,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * Kartu ulasan. Pemilik fitur: Shelfina (features.reviews).
+ * Kartu ulasan.
  */
 @Composable
 fun ReviewCard(

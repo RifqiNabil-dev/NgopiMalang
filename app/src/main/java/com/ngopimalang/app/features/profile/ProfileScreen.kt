@@ -17,15 +17,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -35,21 +46,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ngopimalang.app.core.components.GradientBackdrop
+import com.ngopimalang.app.core.data.toUserMessage
+import kotlinx.coroutines.launch
 
-/**
- * Profil Progress 2: nama, email, dan peran diambil dari sesi Supabase
- * (`profiles.display_name` + `user_roles.role`), bukan dari state lokal.
- */
+
 @Composable
 fun ProfileScreen(
     userName: String,
     userEmail: String,
     isAdmin: Boolean = false,
+    onUpdateName: suspend (String) -> Unit = {},
     onOpenBookmark: () -> Unit,
     onOpenReviews: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showEditDialog by remember { mutableStateOf(false) }
+    var inputName by remember(userName) { mutableStateOf(userName) }
+    var isSaving by remember { mutableStateOf(false) }
+    var editError by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
     Box(modifier = modifier.fillMaxSize()) {
         GradientBackdrop(height = 300.dp)
 
@@ -71,7 +88,12 @@ fun ProfileScreen(
                 ProfileHeader(
                     userName = userName,
                     userEmail = userEmail,
-                    isAdmin = isAdmin
+                    isAdmin = isAdmin,
+                    onEditName = {
+                        inputName = userName
+                        editError = null
+                        showEditDialog = true
+                    }
                 )
             }
 
@@ -86,6 +108,17 @@ fun ProfileScreen(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column {
+                        ProfileMenuItem(
+                            icon = Icons.Filled.Edit,
+                            title = "Ubah Nama",
+                            subtitle = "Perbarui nama tampilan akun",
+                            onClick = {
+                                inputName = userName
+                                editError = null
+                                showEditDialog = true
+                            }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         ProfileMenuItem(
                             icon = Icons.Filled.Favorite,
                             title = "Saved Spot",
@@ -110,26 +143,73 @@ fun ProfileScreen(
                     }
                 }
             }
+        }
 
-            item {
-                Text(
-                    text = "Foto profil dan ubah nama menyusul setelah fitur unggah gambar ke Storage selesai.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item {
-                Text(
-                    text = "NgopiMalang · Progress 2",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        if (showEditDialog) {
+            AlertDialog(
+                onDismissRequest = { if (!isSaving) showEditDialog = false },
+                title = { Text("Ubah Nama Tampilan") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Nama ini akan ditampilkan pada profil dan ulasan cafe yang kamu tulis.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedTextField(
+                            value = inputName,
+                            onValueChange = {
+                                inputName = it
+                                editError = null
+                            },
+                            label = { Text("Nama Lengkap") },
+                            singleLine = true,
+                            isError = editError != null,
+                            supportingText = editError?.let { { Text(it) } },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSaving
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val trimmed = inputName.trim()
+                            if (trimmed.isBlank()) {
+                                editError = "Nama tidak boleh kosong"
+                                return@TextButton
+                            }
+                            scope.launch {
+                                isSaving = true
+                                editError = null
+                                try {
+                                    onUpdateName(trimmed)
+                                    showEditDialog = false
+                                } catch (e: Exception) {
+                                    editError = e.toUserMessage()
+                                } finally {
+                                    isSaving = false
+                                }
+                            }
+                        },
+                        enabled = !isSaving && inputName.isNotBlank() && inputName.trim() != userName
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text("Simpan")
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showEditDialog = false },
+                        enabled = !isSaving
+                    ) {
+                        Text("Batal")
+                    }
+                }
+            )
         }
     }
 }
@@ -138,7 +218,8 @@ fun ProfileScreen(
 private fun ProfileHeader(
     userName: String,
     userEmail: String,
-    isAdmin: Boolean
+    isAdmin: Boolean,
+    onEditName: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -203,6 +284,18 @@ private fun ProfileHeader(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+
+            IconButton(
+                onClick = onEditName,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "Ubah Nama",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

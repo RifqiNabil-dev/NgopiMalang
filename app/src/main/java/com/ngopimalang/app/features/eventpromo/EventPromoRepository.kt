@@ -10,16 +10,14 @@ import io.github.jan.supabase.postgrest.query.Order
 import java.util.UUID
 
 /**
- * Satu-satunya tempat fitur Event & Promo memanggil Supabase (dok 10 aturan A3).
+ * Satu-satunya tempat fitur Event & Promo memanggil Supabase.
  * Tabel: `event_promos`. Menulis: admin. Membaca: event terbit untuk semua, plus
  * milik admin yang belum terbit karena policy mengizinkan `is_published or is_admin()`.
  */
 class EventPromoRepository(private val client: SupabaseClient = Supabase.client) {
 
     /**
-     * Daftar event milik satu kategori. [category] null berarti semua.
-     * Pencarian teks dan penyaringan status dilakukan di ViewModel (dok 10 bagian 4),
-     * supaya hanya ada satu sumber daftar dan tidak ada list yang disimpan ganda.
+     * Daftar event milik satu kategori.
      */
     suspend fun observeEvents(category: EventCategory?, isAdmin: Boolean, limit: Int = 50): List<EventPromo> {
         val rows = client.postgrest["event_promos"]
@@ -73,7 +71,7 @@ class EventPromoRepository(private val client: SupabaseClient = Supabase.client)
             .insert(EventPromoMapper.toWrite(draft)) { select() }
             .decodeList<EventPromoRow>()
         val created = rows.firstOrNull() ?: error("Event tidak dapat disimpan")
-        // Baris hasil insert tidak membawa join cafes; nama diambil dari pilihan form.
+
         return EventPromoMapper.toModel(created).copy(cafeName = cafeName)
     }
 
@@ -89,11 +87,6 @@ class EventPromoRepository(private val client: SupabaseClient = Supabase.client)
         return loadEvent(id) ?: EventPromoMapper.toModel(updated)
     }
 
-    /**
-     * Mengembalikan jumlah baris yang benar-benar terhapus.
-     * Policy menulis berbasis peran mengembalikan 0 baris, bukan exception
-     * (dok 09 bagian 12.3), jadi jumlahnya wajib diperiksa pemanggil.
-     */
     suspend fun delete(id: String): Int =
         client.postgrest["event_promos"]
             .delete {

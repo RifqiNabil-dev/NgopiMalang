@@ -22,10 +22,7 @@ data class EventPromoUiState(
     val errorMessage: String? = null,
     val isAdmin: Boolean = false
 ) {
-    /**
-     * Daftar yang ditampilkan layar. Dihitung, tidak disimpan (dok 10 aturan A4):
-     * tidak ada `allEvents` + `filteredEvents` yang bisa tidak sinkron.
-     */
+
     val visibleEvents: List<EventPromo>
         get() {
             val keyword = query.trim()

@@ -51,8 +51,6 @@ data class CafeDetailRoute(val cafeId: String)
 
 /**
  * Peta seluruh halaman aplikasi.
- *
- * Semua fitur anggota sudah terhubung dengan routing yang lengkap.
  */
 @Composable
 fun AppNavHost(
@@ -131,6 +129,7 @@ fun AppNavHost(
                 userName = authState.name.ifBlank { "Ngopi Lover" },
                 userEmail = authState.email.ifBlank { "belum-ada-email@ngopimalang.app" },
                 isAdmin = authState.isAdmin,
+                onUpdateName = authViewModel::updateDisplayName,
                 onOpenBookmark = { navController.navigate(NavRoutes.BOOKMARK) },
                 onOpenReviews = { navController.navigate(NavRoutes.REVIEWS) },
                 onLogout = authViewModel::logout
@@ -268,7 +267,7 @@ fun AppNavHost(
             )
         }
 
-        // ==================== EVENT & PROMO (Rifqi/Nabil) ====================
+        // ==================== EVENT & PROMO (Nabil) ====================
         composable(NavRoutes.EVENT_PROMO) {
             val isAdmin = authState.isAdmin
             val vm: EventPromoViewModel = viewModel()

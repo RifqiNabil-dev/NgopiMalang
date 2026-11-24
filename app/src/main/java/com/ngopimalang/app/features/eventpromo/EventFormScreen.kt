@@ -43,7 +43,7 @@ import com.ngopimalang.app.core.model.EventCategory
 
 /**
  * Form tambah/edit event. Seluruh input ada di [EventFormViewModel] sehingga rotasi
- * layar tidak menghapus isian (state hoisting, dok 08 bagian 5).
+ * layar tidak menghapus isian (state hoisting).
  * Tombol Hapus hanya muncul di mode edit untuk admin.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +60,6 @@ fun EventFormScreen(
 
     LaunchedEffect(eventId) { viewModel.loadForEdit(eventId) }
 
-    // Layar keluar setelah simpan/hapus berhasil; daftar induk memuat ulang datanya.
     LaunchedEffect(state.done) {
         if (state.done) onSaved()
     }

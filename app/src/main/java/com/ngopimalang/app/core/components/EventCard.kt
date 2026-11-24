@@ -26,13 +26,7 @@ import com.ngopimalang.app.core.model.EventPromo
 import com.ngopimalang.app.core.model.EventStatus
 
 /**
- * Kartu event/promo. Pemilik fitur: Rifqi (features.eventpromo).
- *
- * [showStatus]      — tampilkan badge status (UPCOMING/ONGOING/FINISHED). Default true (di daftar event).
- * [showDescription] — tampilkan cuplikan deskripsi. Default true; set false di beranda agar card lebih ringkas.
- * [showSchedule]    — tampilkan jadwal ringkas (scheduleShort) di bawah judul dengan ikon kalender.
- *                     Di beranda: true tapi pakai format pendek. Di daftar event: true pakai schedule penuh.
- * [useShortSchedule]— pakai event.scheduleShort (format ringkas) alih-alih event.schedule (format penuh).
+ * Kartu event/promo.
  */
 @Composable
 fun EventCard(
@@ -138,7 +132,6 @@ fun EventCard(
 
 /**
  * Badge status event: Akan datang / Berlangsung / Selesai.
- * Warna diambil dari tema, tidak ada hex di sini (dok 08 bagian 1).
  */
 @Composable
 private fun StatusPill(status: EventStatus) {

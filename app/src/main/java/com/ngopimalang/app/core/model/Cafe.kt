@@ -3,8 +3,7 @@ package com.ngopimalang.app.core.model
 import androidx.annotation.DrawableRes
 
 /**
- * Model cafe. Pada Progress 1 data diisi dari [com.ngopimalang.app.core.data.DummyData].
- * Pemilik fitur: Ossa (features.directory).
+ * Model cafe.
  */
 data class Cafe(
     val id: String,

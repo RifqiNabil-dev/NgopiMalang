@@ -1,8 +1,7 @@
 package com.ngopimalang.app.core.model
 
 /**
- * Model kategori vibe. Pemilik fitur: Evia (features.vibe).
- * cafeCount berasal dari view vibes_with_count, bukan dihitung aplikasi.
+ * Model kategori vibe.
  */
 data class Vibe(
     val id: String,

@@ -38,8 +38,6 @@ import com.ngopimalang.app.core.model.EventCategory
 
 /**
  * Daftar Event & Promo. Sumber data dari Supabase lewat [EventPromoViewModel].
- * Lima elemen wajib dok 10 bagian 7.1: indikator muat, empty state,
- * kesalahan + coba lagi, umpan balik simpan, dan daftar berat-key.
  */
 @Composable
 fun EventPromoScreen(
