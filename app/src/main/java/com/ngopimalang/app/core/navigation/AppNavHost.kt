@@ -39,7 +39,9 @@ import com.ngopimalang.app.features.vibe.VibeFormScreen
 import com.ngopimalang.app.features.vibe.VibeScreen
 import com.ngopimalang.app.features.vibe.VibeViewModel
 import com.ngopimalang.app.features.bookmark.BookmarkScreen
+import com.ngopimalang.app.features.bookmark.BookmarkAction
 import com.ngopimalang.app.features.reviews.ReviewsScreen
+
 
 @Serializable
 data class CafeFormRoute(val cafeId: String? = null)
@@ -171,7 +173,10 @@ fun AppNavHost(
                 cafeId = cafeId.orEmpty(),
                 isAdmin = authState.isAdmin,
                 onEdit = { navController.navigate(CafeFormRoute(it)) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                bookmarkAction = { id ->
+                    BookmarkAction(cafeId = id)
+                }
             )
         }
 
@@ -189,9 +194,16 @@ fun AppNavHost(
         // Typed entry point for new modules. Legacy string route above remains an adapter.
         composable<CafeDetailRoute> { entry ->
             val route = entry.toRoute<CafeDetailRoute>()
-            DirectoryDetailScreen(cafeId = route.cafeId, isAdmin = authState.isAdmin,
+            DirectoryDetailScreen(
+                cafeId = route.cafeId,
+                isAdmin = authState.isAdmin,
                 onEdit = { navController.navigate(CafeFormRoute(it)) },
-                onBack = { navController.popBackStack() })
+                onBack = { navController.popBackStack() },
+                bookmarkAction = { id ->
+                    BookmarkAction(cafeId = id)
+                }
+            )
+
         }
 
         // ==================== ULASAN & RATING (Shelfina) ====================
@@ -199,10 +211,17 @@ fun AppNavHost(
             ReviewsScreen()
         }
 
+
         // ==================== SAVED SPOT / BOOKMARK (Shananda) ====================
         composable(NavRoutes.BOOKMARK) {
-            BookmarkScreen()
+            BookmarkScreen(
+                onCafeClick = { cafeId ->
+                    navController.navigate(CafeDetailRoute(cafeId))
+                }
+            )
         }
+
+
 
         // ==================== KATEGORI VIBE (Evia) ====================
         composable(NavRoutes.VIBE) { entry ->
