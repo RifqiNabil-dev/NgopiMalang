@@ -31,6 +31,7 @@ import com.ngopimalang.app.features.auth.RegisterScreen
 import com.ngopimalang.app.features.eventpromo.EventDetailScreen
 import com.ngopimalang.app.features.eventpromo.EventFormScreen
 import com.ngopimalang.app.features.eventpromo.EventPromoScreen
+import com.ngopimalang.app.features.eventpromo.EventPromoViewModel
 import com.ngopimalang.app.features.home.HomeScreen
 import com.ngopimalang.app.features.home.HomeCafeViewModel
 import com.ngopimalang.app.features.profile.ProfileScreen
@@ -249,15 +250,31 @@ fun AppNavHost(
         }
 
         // ==================== EVENT & PROMO (Rifqi/Nabil) ====================
-
         composable(NavRoutes.EVENT_PROMO) {
+            val isAdmin = authState.isAdmin
+            val vm: EventPromoViewModel = viewModel()
+            val owner = LocalLifecycleOwner.current
+            DisposableEffect(owner, isAdmin) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        vm.setAdmin(isAdmin)
+                        vm.load()
+                    }
+                }
+                owner.lifecycle.addObserver(observer)
+                vm.setAdmin(isAdmin)
+                vm.ensureLoaded()
+                onDispose { owner.lifecycle.removeObserver(observer) }
+            }
             EventPromoScreen(
                 onEventClick = { eventId ->
                     navController.navigate(NavRoutes.eventDetailRoute(eventId))
                 },
                 onAddEvent = {
                     navController.navigate(NavRoutes.eventFormRoute())
-                }
+                },
+                isAdmin = isAdmin,
+                viewModel = vm
             )
         }
 
@@ -271,7 +288,11 @@ fun AppNavHost(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToEdit = { id ->
                     navController.navigate(NavRoutes.eventFormRoute(id))
-                }
+                },
+                onNavigateToCafe = { cafeId ->
+                    navController.navigate(CafeDetailRoute(cafeId))
+                },
+                isAdmin = authState.isAdmin
             )
         }
 
@@ -286,7 +307,9 @@ fun AppNavHost(
             val eventId = backStackEntry.arguments?.getString("eventId")
             EventFormScreen(
                 eventId = eventId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() },
+                isAdmin = authState.isAdmin
             )
         }
     }
