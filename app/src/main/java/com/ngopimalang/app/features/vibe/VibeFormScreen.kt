@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,131 +38,145 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-/**
- * vibeId == null  -> mode tambah
- * vibeId != null  -> mode ubah (field terisi dari vibe yang ada)
- */
+/** vibeId == null -> tambah, selain itu -> ubah. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VibeFormScreen(
     vibeId: String?,
     onBack: () -> Unit,
-    vibeViewModel: VibeViewModel = viewModel()
+    viewModel: VibeFormViewModel = viewModel()
 ) {
-    val state by vibeViewModel.uiState.collectAsStateWithLifecycle()
-    val editing = state.vibeById(vibeId)
+    val state by viewModel.formState.collectAsStateWithLifecycle()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    var name by remember(vibeId) { mutableStateOf(editing?.name.orEmpty()) }
-    var description by remember(vibeId) { mutableStateOf(editing?.description.orEmpty()) }
-    var selectedCafes by remember(vibeId) {
-        mutableStateOf(if (vibeId != null) state.cafeIdsByVibe[vibeId].orEmpty() else emptySet())
-    }
-
-    val canSave = name.isNotBlank() && description.isNotBlank()
+    LaunchedEffect(vibeId) { viewModel.loadForEdit(vibeId) }
+    LaunchedEffect(state.done) { if (state.done) onBack() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (editing == null) "Tambah Vibe" else "Ubah Vibe") },
+                title = { Text(if (vibeId == null) "Tambah Vibe" else "Ubah Vibe") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)
         ) {
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
+                value = state.name,
+                onValueChange = viewModel::onNameChange,
                 label = { Text("Nama Vibe") },
-                placeholder = { Text("Contoh: Nugas / WFC") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = state.validationError != null
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = state.description,
+                onValueChange = viewModel::onDescriptionChange,
+                label = { Text("Deskripsi Vibe") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Text("Ikon", style = MaterialTheme.typography.titleSmall)
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(quickIconKeys) { key ->
+                    FilterChip(
+                        selected = state.iconKey.trim().lowercase() == key,
+                        onClick = { viewModel.onIconChange(key) },
+                        label = { Text(key) }
+                    )
+                }
+            }
+            OutlinedTextField(
+                value = state.iconKey,
+                onValueChange = viewModel::onIconChange,
+                label = { Text("Kunci ikon lain (kosong = work)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            state.validationError?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+            }
+            state.errorMessage?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+            }
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Deskripsi Vibe") },
-                placeholder = { Text("Jelaskan suasana yang dicari") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "Pilih Cafe",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
+            Text("Pilih Cafe", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                items(state.allCafes, key = { it.id }) { cafe ->
+                items(state.availableCafes, key = { it.id }) { cafe ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = cafe.id in selectedCafes,
-                            onCheckedChange = { checked ->
-                                selectedCafes = if (checked) {
-                                    selectedCafes + cafe.id
-                                } else {
-                                    selectedCafes - cafe.id
-                                }
-                            }
+                            checked = cafe.id in state.selectedCafeIds,
+                            onCheckedChange = { viewModel.onToggleCafe(cafe.id) }
                         )
-                        Text(
-                            text = cafe.name,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Text(cafe.name, modifier = Modifier.weight(1f))
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onBack) {
-                    Text("Batal")
+                if (vibeId != null) {
+                    TextButton(onClick = { showDeleteDialog = true }, enabled = !state.isSaving) {
+                        Text("Hapus", color = MaterialTheme.colorScheme.error)
+                    }
+                } else {
+                    Spacer(Modifier.height(1.dp))
                 }
-
-                Button(
-                    onClick = {
-                        if (editing == null) {
-                            vibeViewModel.addVibe(name.trim(), description.trim(), selectedCafes.toList())
-                        } else {
-                            vibeViewModel.updateVibe(
-                                editing.id, name.trim(), description.trim(), selectedCafes.toList()
-                            )
-                        }
-                        onBack()
-                    },
-                    enabled = canSave
-                ) {
-                    Text("Simpan")
+                Row {
+                    TextButton(onClick = onBack) { Text("Batal") }
+                    Button(
+                        onClick = viewModel::onSave,
+                        enabled = state.name.isNotBlank() && !state.isSaving
+                    ) { Text(if (state.isSaving) "Menyimpan..." else "Simpan") }
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Hapus vibe?") },
+            text = {
+                Text(
+                    "Vibe \"${state.name}\" akan dihapus. ${state.cafeCount} cafe akan " +
+                        "kehilangan label vibe ini. Cafe-nya tidak ikut terhapus."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    viewModel.onDelete()
+                }) { Text("Hapus", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Batal") } }
+        )
     }
 }

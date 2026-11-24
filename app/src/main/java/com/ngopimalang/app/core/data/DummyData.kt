@@ -15,13 +15,13 @@ import kotlinx.datetime.Instant
 object DummyData {
 
     val vibes = listOf(
-        Vibe("v1", "Nugas / WFC", "Tenang, banyak colokan, cocok buat kerja & kuliah", 16),
-        Vibe("v2", "Aesthetic", "Interior instagramable dan pencahayaan hangat", 12),
-        Vibe("v3", "24 Jam", "Buka sepanjang malam untuk begadang & nugas", 6),
-        Vibe("v4", "Outdoor", "Area terbuka dengan taman dan udara segar khas Malang", 9),
-        Vibe("v5", "Vintage / Retro", "Nuansa nostalgia dengan dekorasi klasik dan musik santai", 5),
-        Vibe("v6", "Rooftop & View", "Pemandangan citylight dan pegunungan dari ketinggian", 4),
-        Vibe("v7", "Minimalist Modern", "Desain bersih, tenang, dan pencahayaan alami", 8)
+        Vibe("v1", "Nugas / WFC", "Tenang, banyak colokan, cocok buat kerja & kuliah", cafeCount = 16),
+        Vibe("v2", "Aesthetic", "Interior instagramable dan pencahayaan hangat", cafeCount = 12),
+        Vibe("v3", "24 Jam", "Buka sepanjang malam untuk begadang & nugas", cafeCount = 6),
+        Vibe("v4", "Outdoor", "Area terbuka dengan taman dan udara segar khas Malang", cafeCount = 9),
+        Vibe("v5", "Vintage / Retro", "Nuansa nostalgia dengan dekorasi klasik dan musik santai", cafeCount = 5),
+        Vibe("v6", "Rooftop & View", "Pemandangan citylight dan pegunungan dari ketinggian", cafeCount = 4),
+        Vibe("v7", "Minimalist Modern", "Desain bersih, tenang, dan pencahayaan alami", cafeCount = 8)
     )
 
     val cafes = listOf(
